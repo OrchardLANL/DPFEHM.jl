@@ -1,0 +1,9 @@
+name = "DPFEHM"
+uuid = "8c3ed914-120a-47bd-8d72-56c743732853"
+authors = ["Daniel O'Malley <omalled@lanl.gov>"]
+version = "0.1.0"
+
+[deps]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
