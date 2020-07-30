@@ -1,6 +1,7 @@
 using Test
 import DifferentiableBackwardEuler
 import DPFEHM
+import Zygote
 
 doplot = false
 if doplot == true
@@ -17,6 +18,19 @@ function W(u)
 end
 function theis(t, r, T, S, Q)
 	return Q * W(r^2 * S / (4 * T * t)) / (4 * pi * T)
+end
+#utitlity for checking gradients
+function checkgradientquickly(f, x0, gradf, n; delta::Float64=1e-8, kwargs...)
+	indicestocheck = sort(collect(1:length(x0)), by=i->abs(gradf[i]), rev=true)[1:n]
+	#indicestocheck = [indicestocheck; rand(1:length(x0), n)]
+	f0 = f(x0)
+	for i in indicestocheck
+		x = copy(x0)
+		x[i] += delta
+		fval = f(x)
+		grad_f_i = (fval - f0) / delta
+		@test isapprox(gradf[i], grad_f_i; kwargs...)
+	end
 end
 
 #test Theis solution against groundwater model
@@ -65,6 +79,7 @@ t0 = 0.0
 tfinal = 60 * 60 * 24 * 1e1
 h0 = fill(steadyhead, size(coords, 2))
 p = Ks
+print("groundwater forward")
 @time h_gw = DifferentiableBackwardEuler.steps_diffeq(h0, f_gw, f_gw_u, f_gw_p, f_gw_t, p, t0, tfinal; abstol=1e-6, reltol=1e-6)
 r0 = 0.1
 goodnodes = collect(filter(i->coords[2, i] == 0 && coords[1, i] > r0 && coords[1, i] <= sidelength / 2, 1:size(coords, 2)))
@@ -84,6 +99,10 @@ if doplot
 	PyPlot.close(fig)
 end
 @test isapprox(theis_drawdowns, gw_drawdowns; atol=1e-1)
+g_gw(p) = DifferentiableBackwardEuler.steps(h0, f_gw, f_gw_u, f_gw_p, f_gw_t, p, t0, tfinal; abstol=1e-6, reltol=1e-6)[goodnodes[round(Int, 0.25 * end)], end]
+print("groundwater gradient")
+@time grad_gw_zygote = Zygote.gradient(g_gw, p)[1]
+checkgradientquickly(g_gw, p, grad_gw_zygote, 3; delta=1e-8, rtol=1e-1)
 
 #test Theis solution against richards equation model
 coords_richards = vcat(coords, zeros(size(coords, 2))')
@@ -102,6 +121,7 @@ function f_richards_p(u, p, t)
 	return DPFEHM.richards_Ks(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, coords_richards, alphas, Ns, Qs, specificstorage, volumes)
 end
 f_richards_t(u, p, t) = zeros(length(u))
+print("richards forward")
 @time h_richards = DifferentiableBackwardEuler.steps_diffeq(h0, f_richards, f_richards_u, f_richards_p, f_richards_t, p, t0, tfinal; abstol=1e-6, reltol=1e-6)
 richards_drawdowns = -h_richards[end][goodnodes] .+ steadyhead
 if doplot
@@ -117,3 +137,7 @@ if doplot
 end
 @test isapprox(theis_drawdowns, richards_drawdowns; atol=1e-1)
 @test isapprox(h_richards[:, :], h_gw[:, :])#make sure richards and groundwater are giving the same thing
+g_richards(p) = DifferentiableBackwardEuler.steps(h0, f_richards, f_richards_u, f_richards_p, f_richards_t, p, t0, tfinal; abstol=1e-6, reltol=1e-6)[goodnodes[round(Int, 0.25 * end)], end]
+print("richards gradient")
+@time grad_richards_zygote = Zygote.gradient(g_richards, p)[1]
+checkgradientquickly(g_richards, p, grad_richards_zygote, 3; delta=1e-8, rtol=1e-1)
