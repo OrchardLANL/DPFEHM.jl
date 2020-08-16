@@ -8,6 +8,7 @@ import StaticArrays
 
 include("grid.jl")
 include("groundwater.jl")
+include("RelPerm.jl")
 include("richards.jl")
 
 end
