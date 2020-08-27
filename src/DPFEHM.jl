@@ -1,6 +1,8 @@
 module DPFEHM
 
+import AlgebraicMultigrid
 import Calculus
+import ChainRulesCore
 import ForwardDiff
 import NonlinearEquations
 import SparseArrays

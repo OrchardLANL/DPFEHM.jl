@@ -17,3 +17,36 @@
 		end
 	end
 end
+
+function groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs)
+	args = (zeros(length(Qs)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, ones(length(Qs)), ones(length(Qs)))
+	b = -DPFEHM.groundwater_residuals(args...)
+	A = DPFEHM.groundwater_h(args...)
+	ml = AlgebraicMultigrid.ruge_stuben(A)
+	return AlgebraicMultigrid.solve(ml, b)
+end
+
+function ChainRulesCore.rrule(::typeof(groundwater_steadystate), Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs)
+	args_noh = (zeros(length(Qs)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, ones(length(Qs)), ones(length(Qs)))
+	b = -DPFEHM.groundwater_residuals(args_noh...)
+	A = DPFEHM.groundwater_h(args_noh...)
+	ml = AlgebraicMultigrid.ruge_stuben(A)
+	h = AlgebraicMultigrid.solve(ml, b)
+	function pullback(delta)
+		args = (h, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, ones(length(Qs)), ones(length(Qs)))
+		ml_A_prime = AlgebraicMultigrid.ruge_stuben(SparseArrays.SparseMatrixCSC(A'))
+		lambda = AlgebraicMultigrid.solve(ml_A_prime, delta)
+		#lambda = Af' \ delta
+		gw_Ks = groundwater_Ks(args...)
+		gw_dirichleths = groundwater_dirichleths(args...)
+		gw_Qs = groundwater_Qs(args...)
+		return (ChainRulesCore.NO_FIELDS,#step function
+				@ChainRulesCore.thunk(-(gw_Ks' * lambda)),#y0
+				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#neighbors
+				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#areasoverlengths
+				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#dirichletnodes
+				@ChainRulesCore.thunk(-(gw_dirichleths' * lambda)),#dirichleths
+				@ChainRulesCore.thunk(-(gw_Qs' * lambda)))
+	end
+	return h, pullback
+end
