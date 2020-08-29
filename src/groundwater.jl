@@ -36,7 +36,6 @@ function ChainRulesCore.rrule(::typeof(groundwater_steadystate), Ks, neighbors, 
 		args = (h, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, ones(length(Qs)), ones(length(Qs)))
 		ml_A_prime = AlgebraicMultigrid.ruge_stuben(SparseArrays.SparseMatrixCSC(A'))
 		lambda = AlgebraicMultigrid.solve(ml_A_prime, delta)
-		#lambda = Af' \ delta
 		gw_Ks = groundwater_Ks(args...)
 		gw_dirichleths = groundwater_dirichleths(args...)
 		gw_Qs = groundwater_Qs(args...)
