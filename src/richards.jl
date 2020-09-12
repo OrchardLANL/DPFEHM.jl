@@ -74,25 +74,32 @@ end
 	end
 end
 
-function richards_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs)
-	args = (ones(length(Qs)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
-	b = -DPFEHM.richards_residuals(args...)
-	A = DPFEHM.richards_psi(args...)
-	ml = AlgebraicMultigrid.ruge_stuben(A)
-	println("this needs to be replaced with a nonlinear solve")
-	return AlgebraicMultigrid.solve(ml, b)
+function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; kwargs...)
+	args = (psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+	function residuals!(residuals, psi)
+		myargs = (psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+		copy!(residuals, DPFEHM.richards_residuals(myargs...))
+	end
+	function jacobian!(J, psi)
+		myargs = (psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+		DPFEHM.richards_psi!(J, myargs...)
+	end
+	J0 = DPFEHM.richards_psi(args...)
+	residuals0 = DPFEHM.richards_residuals(args...)
+	df = NLsolve.OnceDifferentiable(residuals!, jacobian!, psi0, residuals0, J0)
+	soln = NLsolve.nlsolve(df, psi0; kwargs...)
+	if !NLsolve.converged(soln)
+		display(soln)
+		error("solution did not converge")
+	end
+	return soln.zero
 end
 
-function ChainRulesCore.rrule(::typeof(richards_steadystate), Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs)
-	args_noh = (ones(length(Qs)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
-	b = -DPFEHM.richards_residuals(args_noh...)
-	A = DPFEHM.richards_psi(args_noh...)
-	ml = AlgebraicMultigrid.ruge_stuben(A)
-	println("this needs to be replaced with a nonlinear solve")
-	h = AlgebraicMultigrid.solve(ml, b)
+function ChainRulesCore.rrule(::typeof(richards_steadystate), psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; kwargs...)
+	psi = richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; kwargs...)
 	function pullback(delta)
-		args = (h, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
-		ml_A_prime = AlgebraicMultigrid.ruge_stuben(SparseArrays.SparseMatrixCSC(A'))
+		args = (psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+		ml_A_prime = AlgebraicMultigrid.ruge_stuben(SparseArrays.SparseMatrixCSC(richards_psi(args...)'))
 		lambda = AlgebraicMultigrid.solve(ml_A_prime, delta)
 		req_Ks = richards_Ks(args...)
 		req_dirichletpsis = richards_dirichletpsis(args...)
@@ -100,6 +107,7 @@ function ChainRulesCore.rrule(::typeof(richards_steadystate), Ks, neighbors, are
 		req_Ns = richards_Ns(args...)
 		req_Qs = richards_Qs(args...)
 		return (ChainRulesCore.NO_FIELDS,#step function
+				@ChainRulesCore.thunk(zeros(length(psi0))),#psi0 -- should be insensitive to psi0
 				@ChainRulesCore.thunk(-(req_Ks' * lambda)),#Ks
 				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#neighbors
 				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#areasoverlengths
@@ -110,5 +118,5 @@ function ChainRulesCore.rrule(::typeof(richards_steadystate), Ks, neighbors, are
 				@ChainRulesCore.thunk(-(req_Ns' * lambda)),#Ns
 				@ChainRulesCore.thunk(-(req_Qs' * lambda)))#Qs
 	end
-	return h, pullback
+	return psi, pullback
 end
