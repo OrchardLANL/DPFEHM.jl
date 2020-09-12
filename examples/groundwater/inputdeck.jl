@@ -17,7 +17,8 @@ end
 
 mins = [0, 0]#meters
 maxs = [100, 100]#meters
-allns = [[101, 101], [201, 201], [401, 401], [801, 801]]
+#allns = [[101, 101], [201, 201], [401, 401], [801, 801]]
+allns = [[51, 51]]
 allns = [[allns[end]]; allns]
 num_eigenvectors = 200
 x_true = randn(num_eigenvectors)
@@ -102,6 +103,7 @@ for (i, ns) in enumerate(allns)
 	numobs = 250
 	obsnodes = getobsnodes(coords, obslocs)
 	obssigma = 1e-3
+	observations .= h_true[obsnodes]#set up the observations
 	f(logKs) = sum((solveforh(logKs, dirichleths)[obsnodes] - observations) .^ 2 ./ obssigma ^ 2)
 	h = solveforh(logKs, dirichleths)
 	h = solveforh(logKs, dirichleths)
@@ -158,7 +160,6 @@ for (i, ns) in enumerate(allns)
 		println()
 		PyPlot.close(fig)
 
-		observations .= h_true[obsnodes]#set up the observations
 	else#otherwise, do the optimization
 		options = Optim.Options(iterations=200, extended_trace=false, store_trace=true, show_trace=ifelse(i == length(allns), true, false), x_tol=1e-6, time_limit=60 * 60 * 2)
 		print("Optimization time")
