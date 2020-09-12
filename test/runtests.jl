@@ -3,7 +3,6 @@ import DifferentiableBackwardEuler
 import DPFEHM
 import Zygote
 
-#=
 doplot = false
 if doplot == true
 	import PyPlot
@@ -142,7 +141,6 @@ g_richards(p) = DifferentiableBackwardEuler.steps(h0, f_richards, f_richards_u, 
 print("richards gradient")
 @time grad_richards_zygote = Zygote.gradient(g_richards, p)[1]
 checkgradientquickly(g_richards, p, grad_richards_zygote, 3; delta=1e-8, rtol=1e-1)
-=#
 
 #test the Corey relative permeability functions against some known good values
 N_n, N_w = 2.0, 2.0
