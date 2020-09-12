@@ -54,19 +54,6 @@ function effective_saturation(alpha::Number, psi::Number, N::Number)
 	end
 end
 
-function saturation(psi::Array, coords::Array)
-	Se = similar(psi)
-	for i = 1:length(psi)
-		if inclay(coords[1, i], coords[2, i])
-			_, alpha, N, residual_saturation = params[:clay]
-		else
-			_, alpha, N, residual_saturation = params[:claysilt]
-		end
-		Se[i] = residual_saturation + effective_saturation(alpha, psi[i], N) * (1 - residual_saturation)
-	end
-	return Se
-end
-
 @NonlinearEquations.equations exclude=(coords, dirichletnodes, neighbors, areasoverlengths) function richards(psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, specificstorage, volumes)
 	NonlinearEquations.setnumequations(length(psi))
 	for i = 1:length(psi)
@@ -79,10 +66,49 @@ end
 	for (i, (node_a, node_b)) in enumerate(neighbors)
 		for (node1, node2) in [(node_a, node_b), (node_b, node_a)]
 			if !(node1 in dirichletnodes) && !(node2 in dirichletnodes)
-				NonlinearEquations.addterm(node1, hm(kr(psi[node1], alphas[i], Ns[i]), kr(psi[node2], alphas[i], Ns[i])) * Ks[i] * (psi[node2] + coords[2, node2] - psi[node1] - coords[2, node1]) * areasoverlengths[i] / (specificstorage[node1] * volumes[node1]))
+				NonlinearEquations.addterm(node1, hm(kr(psi[node1], alphas[i], Ns[i]), kr(psi[node2], alphas[i], Ns[i])) * Ks[i] * (psi[node2] + coords[3, node2] - psi[node1] - coords[3, node1]) * areasoverlengths[i] / (specificstorage[node1] * volumes[node1]))
 			elseif !(node1 in dirichletnodes) && node2 in dirichletnodes
-				NonlinearEquations.addterm(node1, hm(kr(psi[node1], alphas[i], Ns[i]), kr(dirichletpsis[node2], alphas[i], Ns[i])) * Ks[i] * (dirichletpsis[node2] + coords[2, node2] - psi[node1] - coords[2, node1]) * areasoverlengths[i] / (specificstorage[node1] * volumes[node1]))
+				NonlinearEquations.addterm(node1, hm(kr(psi[node1], alphas[i], Ns[i]), kr(dirichletpsis[node2], alphas[i], Ns[i])) * Ks[i] * (dirichletpsis[node2] + coords[3, node2] - psi[node1] - coords[3, node1]) * areasoverlengths[i] / (specificstorage[node1] * volumes[node1]))
 			end
 		end
 	end
+end
+
+function richards_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs)
+	args = (ones(length(Qs)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+	b = -DPFEHM.richards_residuals(args...)
+	A = DPFEHM.richards_psi(args...)
+	ml = AlgebraicMultigrid.ruge_stuben(A)
+	println("this needs to be replaced with a nonlinear solve")
+	return AlgebraicMultigrid.solve(ml, b)
+end
+
+function ChainRulesCore.rrule(::typeof(richards_steadystate), Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs)
+	args_noh = (ones(length(Qs)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+	b = -DPFEHM.richards_residuals(args_noh...)
+	A = DPFEHM.richards_psi(args_noh...)
+	ml = AlgebraicMultigrid.ruge_stuben(A)
+	println("this needs to be replaced with a nonlinear solve")
+	h = AlgebraicMultigrid.solve(ml, b)
+	function pullback(delta)
+		args = (h, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+		ml_A_prime = AlgebraicMultigrid.ruge_stuben(SparseArrays.SparseMatrixCSC(A'))
+		lambda = AlgebraicMultigrid.solve(ml_A_prime, delta)
+		req_Ks = richards_Ks(args...)
+		req_dirichletpsis = richards_dirichletpsis(args...)
+		req_alphas = richards_alphas(args...)
+		req_Ns = richards_Ns(args...)
+		req_Qs = richards_Qs(args...)
+		return (ChainRulesCore.NO_FIELDS,#step function
+				@ChainRulesCore.thunk(-(req_Ks' * lambda)),#Ks
+				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#neighbors
+				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#areasoverlengths
+				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#dirichletnodes
+				@ChainRulesCore.thunk(-(req_dirichletpsis' * lambda)),#dirichletpsis
+				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#coords
+				@ChainRulesCore.thunk(-(req_alphas' * lambda)),#alphas
+				@ChainRulesCore.thunk(-(req_Ns' * lambda)),#Ns
+				@ChainRulesCore.thunk(-(req_Qs' * lambda)))#Qs
+	end
+	return h, pullback
 end
