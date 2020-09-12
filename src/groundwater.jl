@@ -40,12 +40,12 @@ function ChainRulesCore.rrule(::typeof(groundwater_steadystate), Ks, neighbors, 
 		gw_dirichleths = groundwater_dirichleths(args...)
 		gw_Qs = groundwater_Qs(args...)
 		return (ChainRulesCore.NO_FIELDS,#step function
-				@ChainRulesCore.thunk(-(gw_Ks' * lambda)),#y0
+				@ChainRulesCore.thunk(-(gw_Ks' * lambda)),#Ks
 				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#neighbors
 				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#areasoverlengths
 				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#dirichletnodes
 				@ChainRulesCore.thunk(-(gw_dirichleths' * lambda)),#dirichleths
-				@ChainRulesCore.thunk(-(gw_Qs' * lambda)))
+				@ChainRulesCore.thunk(-(gw_Qs' * lambda)))#Qs
 	end
 	return h, pullback
 end
