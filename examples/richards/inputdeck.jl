@@ -16,8 +16,13 @@ function getobsnodes(coords, obslocs)
 end
 
 mins = [0, 0]#meters
-maxs = [100, 100]#meters
+maxs = [100, 10]#meters
+#ns = [11, 11]
+#ns = [21, 21]
 ns = [51, 51]
+#ns = [101, 101]
+#ns = [201, 201]
+#ns = [401, 401]
 num_eigenvectors = 200
 x_true = randn(num_eigenvectors)
 x0 = zeros(num_eigenvectors)
@@ -27,28 +32,35 @@ obslocs_y = range(mins[2], maxs[2]; length=sqrtnumobs + 2)[2:end - 1]
 obslocs = collect(Iterators.product(obslocs_x, obslocs_y))[:]
 observations = Array{Float64}(undef, length(obslocs))
 
-	Random.seed!(0)
 	coords, neighbors, areasoverlengths, _ = DPFEHM.regulargrid2d(mins, maxs, ns, 1.0)
-	coords = vcat(coords, zeros(size(coords, 2))')#add a z component that is constant so gravity doesn't impact the flow
+	coords = vcat(coords, zeros(size(coords, 2))')#add a z component
+	coords[3, :] = coords[2, :]#swap the y and z components
+	coords[2, :] .= 0.0
 	Qs = zeros(size(coords, 2))
-	boundaryhead(x, y) = 5 * (x - maxs[1]) / (mins[1] - maxs[1]) + 5
+	boundaryhead(x, y, z) = 0.0 - z
 	dirichletnodes = Int[]
 	dirichleths = zeros(size(coords, 2))
 	for i = 1:size(coords, 2)
-		if coords[1, i] == mins[1] || coords[1, i] == maxs[1] || coords[2, i] == mins[2] || coords[2, i] == maxs[2]
+		if coords[3, i] == mins[2]
 			push!(dirichletnodes, i)
-			dirichleths[i] = boundaryhead(coords[1:2, i]...)
+			dirichleths[i] = boundaryhead(coords[:, i]...)
+		elseif coords[3, i] == maxs[2] && coords[1, i] > maxs[1] * 1 / 4 && coords[1, i] < maxs[1] * 3 / 4
+			Qs[i] = 1e-2
 		end
 	end
 
-	lambda = 50.0#meters -- correlation length of log-conductivity
+	lambda = 10.0#meters -- correlation length of log-conductivity
 	sigma = 1.0#standard deviation of log-conductivity
 	mu = 0.0#mean of log-permeability can be arbitrary because this is steady-state and there are no fluid sources
 
-	cov = GaussianRandomFields.CovarianceFunction(2, GaussianRandomFields.Matern(lambda, 1; σ=sigma))
+	#cov = GaussianRandomFields.CovarianceFunction(2, GaussianRandomFields.Matern(lambda, 1; σ=sigma))
+	#anisotropy = [1 / lambda 0.1 / lambda;  / lambda 1 / lambda]
+	anisotropy = [1 0.9; 0.9 1] / lambda
+	cov = GaussianRandomFields.CovarianceFunction(2, GaussianRandomFields.AnisotropicExponential(anisotropy, σ=sigma))
 	x_pts = range(mins[1], maxs[1]; length=ns[1])
-	y_pts = range(mins[2], maxs[2]; length=ns[2])
-	@time grf = GaussianRandomFields.GaussianRandomField(cov, GaussianRandomFields.KarhunenLoeve(num_eigenvectors), x_pts, y_pts)
+	z_pts = range(mins[2], maxs[2]; length=ns[2])
+	#@time grf = GaussianRandomFields.GaussianRandomField(cov, GaussianRandomFields.KarhunenLoeve(num_eigenvectors), x_pts, z_pts)
+	@time grf = GaussianRandomFields.GaussianRandomField(cov, GaussianRandomFields.KarhunenLoeve(num_eigenvectors), x_pts, x_pts)
 	@time logKs = GaussianRandomFields.sample(grf)
 	alphas = fill(0.375, length(neighbors))
 	Ns = fill(1.25, length(neighbors))
@@ -57,7 +69,7 @@ observations = Array{Float64}(undef, length(obslocs))
 
 	#plot a realization
 	fig, ax = PyPlot.subplots()
-	ax.imshow(logKs)
+	ax.imshow(logKs, origin="lower")
 	ax.title.set_text("Random Conductivity Field")
 	display(fig)
 	println()
@@ -68,10 +80,10 @@ observations = Array{Float64}(undef, length(obslocs))
 	rp = Random.randperm(size(parameterization, 2))
 	for (i, ax) in enumerate(axs)
 		if i <= length(axs) / 2
-			ax.imshow(reshape(parameterization[:, i], ns...))
+			ax.imshow(reshape(parameterization[:, i], ns...), origin="lower")
 			ax.title.set_text("Eigenvector $i")
 		else
-			ax.imshow(reshape(parameterization[:, rp[i]], ns...))
+			ax.imshow(reshape(parameterization[:, rp[i]], ns...), origin="lower")
 			ax.title.set_text("Eigenvector $(rp[i])")
 		end
 	end
@@ -88,7 +100,7 @@ observations = Array{Float64}(undef, length(obslocs))
 			return fill(NaN, length(Qs))#this is needed to prevent the solver from blowing up if the line search takes us somewhere crazy
 		else
 			Ks_neighbors = logKs2Ks_neighbors(logKs)
-			psi0 = map(i->boundaryhead(coords[1, i], coords[2, i]), 1:size(coords, 2))
+			psi0 = map(i->boundaryhead(coords[:, i]...), 1:size(coords, 2))
 			return DPFEHM.richards_steadystate(psi0, Ks_neighbors, neighbors, areasoverlengths, dirichletnodes, dirichleths, coords, alphas, Ns, Qs)
 		end
 	end
@@ -105,7 +117,7 @@ observations = Array{Float64}(undef, length(obslocs))
 	h = solveforh(logKs, dirichleths)
 	h = solveforh(logKs, dirichleths)
 	print("forward solve time")
-	@time h = solveforh(logKs_true, dirichleths)
+	@time h = solveforh(logKs, dirichleths)
 	zg = Zygote.gradient(f, logKs)[1]
 	zg = Zygote.gradient(f, logKs)[1]#work out the precompilation
 	print("gradient time")
@@ -119,18 +131,18 @@ observations = Array{Float64}(undef, length(obslocs))
 	print("eigs gradient time")
 	@time zgeigs = Zygote.gradient(feigs, x_true)[1]
 
-	#plot the solution, the difference between the solution and the solution for a uniform medium, and the logKs
+	#plot the solution, the difference between the solution and the solution without recharge, and the logKs
 	fig, axs = PyPlot.subplots(1, 4, figsize=(32, 8))
-	ims = axs[1].imshow(reshape(h, ns...))
+	ims = axs[1].imshow(reshape(h, ns...), origin="lower")
 	axs[1].title.set_text("Head for Random Conductivity")
 	fig.colorbar(ims, ax=axs[1])
-	ims = axs[2].imshow(reshape(h .- map(i->boundaryhead(coords[1:2, i]...), 1:size(coords, 2)), ns...))
-	axs[2].title.set_text("Head Fluctuation for Random Conductivity")
+	ims = axs[2].imshow(DPFEHM.effective_saturation.(alphas[1], reshape(h, ns...), Ns[1]), origin="lower")
+	axs[2].title.set_text("Effective Saturation for Random Conductivity")
 	fig.colorbar(ims, ax=axs[2])
-	ims = axs[3].imshow(logKs)
+	ims = axs[3].imshow(logKs, origin="lower")
 	axs[3].title.set_text("Random Conductivity Field")
 	fig.colorbar(ims, ax=axs[3])
-	ims = axs[4].imshow(zg)
+	ims = axs[4].imshow(zg, origin="lower")
 	axs[4].title.set_text("Gradient of Loss w.r.t. Conductivity")
 	fig.colorbar(ims, ax=axs[4])
 	fig.tight_layout()
@@ -138,15 +150,15 @@ observations = Array{Float64}(undef, length(obslocs))
 	println()
 	PyPlot.close(fig)
 
-	#plot the solution, the difference between the solution and the solution for a uniform medium, and the logKs
+	#plot the solution, the difference between the solution and the solution without recharge, and the logKs
 	fig, axs = PyPlot.subplots(1, 4, figsize=(32, 8))
-	ims = axs[1].imshow(reshape(h_true, ns...))
-	axs[1].title.set_text("Head for Random Conductivity")
+	ims = axs[1].imshow(reshape(h_true, ns...), origin="lower")
+	axs[1].title.set_text("Head for True Conductivity")
 	fig.colorbar(ims, ax=axs[1])
-	ims = axs[2].imshow(reshape(h_true .- map(i->boundaryhead(coords[1:2, i]...), 1:size(coords, 2)), ns...))
-	axs[2].title.set_text("Head Fluctuation for Random Conductivity")
+	ims = axs[2].imshow(DPFEHM.effective_saturation.(alphas[1], reshape(h_true, ns...), Ns[1]), origin="lower")
+	axs[2].title.set_text("Effective Saturation for True Conductivity")
 	fig.colorbar(ims, ax=axs[2])
-	ims = axs[3].imshow(x2logKs(x_true))
+	ims = axs[3].imshow(x2logKs(x_true), origin="lower")
 	axs[3].title.set_text("True Conductivity Field")
 	fig.colorbar(ims, ax=axs[3])
 	ims = axs[4].plot(zgeigs)
