@@ -18,20 +18,20 @@
 	end
 end
 
-function groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs)
+function groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; kwargs...)
 	args = (zeros(length(Qs)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, ones(length(Qs)), ones(length(Qs)))
 	b = -DPFEHM.groundwater_residuals(args...)
 	A = DPFEHM.groundwater_h(args...)
 	ml = AlgebraicMultigrid.ruge_stuben(A)
-	return AlgebraicMultigrid.solve(ml, b)
+	return AlgebraicMultigrid.solve(ml, b; kwargs...)
 end
 
-function ChainRulesCore.rrule(::typeof(groundwater_steadystate), Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs)
+function ChainRulesCore.rrule(::typeof(groundwater_steadystate), Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; kwargs...)
 	args_noh = (zeros(length(Qs)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, ones(length(Qs)), ones(length(Qs)))
 	b = -DPFEHM.groundwater_residuals(args_noh...)
 	A = DPFEHM.groundwater_h(args_noh...)
 	ml = AlgebraicMultigrid.ruge_stuben(A)
-	h = AlgebraicMultigrid.solve(ml, b)
+	h = AlgebraicMultigrid.solve(ml, b; kwargs...)
 	function pullback(delta)
 		args = (h, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, ones(length(Qs)), ones(length(Qs)))
 		ml_A_prime = AlgebraicMultigrid.ruge_stuben(SparseArrays.SparseMatrixCSC(A'))
