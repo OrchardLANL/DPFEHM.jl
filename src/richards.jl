@@ -99,8 +99,7 @@ function ChainRulesCore.rrule(::typeof(richards_steadystate), psi0, Ks, neighbor
 	psi = richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; kwargs...)
 	function pullback(delta)
 		args = (psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
-		ml_A_prime = AlgebraicMultigrid.ruge_stuben(SparseArrays.SparseMatrixCSC(richards_psi(args...)'))
-		lambda = AlgebraicMultigrid.solve(ml_A_prime, delta)
+		lambda = richards_psi(args...)' \ delta
 		req_Ks = richards_Ks(args...)
 		req_dirichletpsis = richards_dirichletpsis(args...)
 		req_alphas = richards_alphas(args...)

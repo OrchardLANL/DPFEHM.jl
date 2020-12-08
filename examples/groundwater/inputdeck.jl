@@ -17,7 +17,8 @@ end
 
 mins = [0, 0]#meters
 maxs = [100, 100]#meters
-allns = [[101, 101], [201, 201], [401, 401], [801, 801]]
+#allns = [[101, 101], [201, 201], [401, 401], [801, 801], [1601, 1601]]
+allns = [[101, 101], [201, 201], [401, 401]]
 allns = [[allns[end]]; allns]
 num_eigenvectors = 200
 x_true = randn(num_eigenvectors)

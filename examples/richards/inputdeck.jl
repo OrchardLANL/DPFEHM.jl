@@ -10,7 +10,7 @@ Random.seed!(0)
 function getobsnodes(coords, obslocs)
 	obsnodes = Array{Int}(undef, length(obslocs))
 	for i = 1:length(obslocs)
-		obsnodes[i] = findmin(map(j->sum((obslocs[i] .- coords[1:2, j]) .^ 2), 1:size(coords, 2)))[2]
+		obsnodes[i] = findmin(map(j->sum((obslocs[i] .- coords[[1, 3], j]) .^ 2), 1:size(coords, 2)))[2]
 	end
 	return obsnodes
 end
@@ -19,17 +19,18 @@ mins = [0, 0]#meters
 maxs = [100, 10]#meters
 #ns = [11, 11]
 #ns = [21, 21]
-ns = [51, 51]
+#ns = [51, 51]
 #ns = [101, 101]
 #ns = [201, 201]
 #ns = [401, 401]
+ns = [801, 801]
 num_eigenvectors = 200
 x_true = randn(num_eigenvectors)
 x0 = zeros(num_eigenvectors)
 sqrtnumobs = 16
 obslocs_x = range(mins[1], maxs[1]; length=sqrtnumobs + 2)[2:end - 1]
-obslocs_y = range(mins[2], maxs[2]; length=sqrtnumobs + 2)[2:end - 1]
-obslocs = collect(Iterators.product(obslocs_x, obslocs_y))[:]
+obslocs_z = range(mins[2], maxs[2]; length=sqrtnumobs + 2)[2:end - 1]
+obslocs = collect(Iterators.product(obslocs_x, obslocs_z))[:]
 observations = Array{Float64}(undef, length(obslocs))
 
 	coords, neighbors, areasoverlengths, _ = DPFEHM.regulargrid2d(mins, maxs, ns, 1.0)
@@ -70,7 +71,7 @@ observations = Array{Float64}(undef, length(obslocs))
 	#plot a realization
 	fig, ax = PyPlot.subplots()
 	ax.imshow(logKs, origin="lower")
-	ax.title.set_text("Random Conductivity Field")
+	ax.title.set_text("Random Permeability Field")
 	display(fig)
 	println()
 	PyPlot.close(fig)
@@ -109,60 +110,29 @@ observations = Array{Float64}(undef, length(obslocs))
 	logKs_true = x2logKs(x_true)
 	h_true = solveforheigs(x_true)
 
-	numobs = 250
 	obsnodes = getobsnodes(coords, obslocs)
 	obssigma = 1e-3
 	observations .= h_true[obsnodes]#set up the observations
 	f(logKs) = sum((solveforh(logKs, dirichleths)[obsnodes] - observations) .^ 2 ./ obssigma ^ 2)
-	h = solveforh(logKs, dirichleths)
-	h = solveforh(logKs, dirichleths)
 	print("forward solve time")
 	@time h = solveforh(logKs, dirichleths)
-	zg = Zygote.gradient(f, logKs)[1]
-	zg = Zygote.gradient(f, logKs)[1]#work out the precompilation
 	print("gradient time")
 	@time zg = Zygote.gradient(f, logKs)[1]
 
-	#now reformulate the function in terms of the cofficients of the eigenvectors with some regularization in there
-	feigs(x) = f(x2logKs(x)) + sum(x .^ 2)
-	print("eigs forward solve time")
-	@time feigs(x_true)
-	zgeigs = Zygote.gradient(feigs, x_true)[1]
-	print("eigs gradient time")
-	@time zgeigs = Zygote.gradient(feigs, x_true)[1]
-
 	#plot the solution, the difference between the solution and the solution without recharge, and the logKs
-	fig, axs = PyPlot.subplots(1, 4, figsize=(32, 8))
+	fig, axs = PyPlot.subplots(1, 4, figsize=(16, 4))
 	ims = axs[1].imshow(reshape(h, ns...), origin="lower")
-	axs[1].title.set_text("Head for Random Conductivity")
+	axs[1].title.set_text("Head for Random Permeability")
 	fig.colorbar(ims, ax=axs[1])
 	ims = axs[2].imshow(DPFEHM.effective_saturation.(alphas[1], reshape(h, ns...), Ns[1]), origin="lower")
-	axs[2].title.set_text("Effective Saturation for Random Conductivity")
+	axs[2].title.set_text("Effective Saturation\nfor Random Permeability")
 	fig.colorbar(ims, ax=axs[2])
 	ims = axs[3].imshow(logKs, origin="lower")
-	axs[3].title.set_text("Random Conductivity Field")
+	axs[3].title.set_text("Random Permeability Field")
 	fig.colorbar(ims, ax=axs[3])
 	ims = axs[4].imshow(zg, origin="lower")
-	axs[4].title.set_text("Gradient of Loss w.r.t. Conductivity")
+	axs[4].title.set_text("Gradient of Loss\nw.r.t. Permeability")
 	fig.colorbar(ims, ax=axs[4])
-	fig.tight_layout()
-	display(fig)
-	println()
-	PyPlot.close(fig)
-
-	#plot the solution, the difference between the solution and the solution without recharge, and the logKs
-	fig, axs = PyPlot.subplots(1, 4, figsize=(32, 8))
-	ims = axs[1].imshow(reshape(h_true, ns...), origin="lower")
-	axs[1].title.set_text("Head for True Conductivity")
-	fig.colorbar(ims, ax=axs[1])
-	ims = axs[2].imshow(DPFEHM.effective_saturation.(alphas[1], reshape(h_true, ns...), Ns[1]), origin="lower")
-	axs[2].title.set_text("Effective Saturation for True Conductivity")
-	fig.colorbar(ims, ax=axs[2])
-	ims = axs[3].imshow(x2logKs(x_true), origin="lower")
-	axs[3].title.set_text("True Conductivity Field")
-	fig.colorbar(ims, ax=axs[3])
-	ims = axs[4].plot(zgeigs)
-	axs[4].title.set_text("Gradient of Loss w.r.t. Eigenvector Coefficients")
 	fig.tight_layout()
 	display(fig)
 	println()
