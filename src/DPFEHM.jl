@@ -4,6 +4,7 @@ import AlgebraicMultigrid
 import Calculus
 import ChainRulesCore
 import ForwardDiff
+import Interpolations
 import NLsolve
 import NonlinearEquations
 import SparseArrays

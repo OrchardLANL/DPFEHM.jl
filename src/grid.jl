@@ -1,8 +1,11 @@
+function getpoints(min, max, n)
+	return range(min, max; length=n)
+end
 function regulargrid2d(mins, maxs, ns, dz)
 	linearindex = (i1, i2)->i2 + ns[2] * (i1 - 1)
 	coords = Array{Float64}(undef, 2, prod(ns))
-	xs = range(mins[1]; stop=maxs[1], length=ns[1])
-	ys = range(mins[2]; stop=maxs[2], length=ns[2])
+	xs = getpoints(mins[1], maxs[1], ns[1])
+	ys = getpoints(mins[2], maxs[2], ns[2])
 	dx = xs[2] - xs[1]
 	dy = ys[2] - ys[1]
 	j = 1
@@ -32,9 +35,9 @@ end
 function regulargrid3d(mins, maxs, ns)
 	linearindex = (i1, i2, i3)->i3 + ns[3] * (i2 - 1) + ns[3] * ns[2] * (i1 - 1)
 	coords = Array{Float64}(undef, 3, prod(ns))
-	xs = range(mins[1]; stop=maxs[1], length=ns[1])
-	ys = range(mins[2]; stop=maxs[2], length=ns[2])
-	zs = range(mins[3]; stop=maxs[3], length=ns[3])
+	xs = getpoints(mins[1], maxs[1], ns[1])
+	ys = getpoints(mins[2], maxs[2], ns[2])
+	zs = getpoints(mins[3], maxs[3], ns[3])
 	dx = xs[2] - xs[1]
 	dy = ys[2] - ys[1]
 	dz = zs[2] - zs[1]
@@ -69,28 +72,11 @@ function regulargrid3d(mins, maxs, ns)
 	return coords, neighbors, areasoverlengths, volumes
 end
 
-function darcy_velocity(h, Ks, coords, ns)
-	@assert length(ns) == 2
-	@show size(Ks)
-	@show size(ns)
-	hr = reshape(h, ns...)
-	vr = zeros(2, ns...)
-	@show size(vr)
-	@show ns
-	coordsr = reshape(coords, 2, reverse(ns)...)
-	@show size(coordsr)
-	@show size(hr)
-	for i = 2:ns[1] - 1
-		for j = 2:ns[2] - 1
-			#=
-			if coordsr[1, j, i + 1, j] - coordsr[1, i - 1, j] == 0
-				@show i, j
-				@show coordsr[1, i + 1, j], coordsr[1, i - 1, j]
-			end
-			=#
-			vr[1, i, j] = Ks[i, j] * (hr[i + 1, j] - hr[i - 1, j]) / (coordsr[1, j, i + 1] - coordsr[1, j, i - 1])
-			vr[2, i, j] = Ks[i, j] * (hr[i, j + 1] - hr[i, j - 1]) / (coordsr[2, j + 1, i] - coordsr[2, j - 1, i])
-		end
-	end
-	return vr
+function darcy_velocity(h, Ks, mins, maxs, ns)
+	allpoints = map(getpoints, mins, maxs, ns)
+	h_itp_unscaled = Interpolations.interpolate(h, Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnCell()))))
+	h_itp = Interpolations.scale(h_itp_unscaled, reverse(allpoints)...)
+	K_itp_unscaled = Interpolations.interpolate(Ks, Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnCell()))))
+	K_itp = Interpolations.scale(K_itp_unscaled, reverse(allpoints)...)
+	return (x...)->reverse(K_itp(x...) * Interpolations.gradient(h_itp, x...))
 end
