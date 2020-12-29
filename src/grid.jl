@@ -72,7 +72,7 @@ function regulargrid3d(mins, maxs, ns)
 	return coords, neighbors, areasoverlengths, volumes
 end
 
-function darcy_velocity(h, Ks, mins, maxs, ns)
+function darcy_velocity(h, Ks, mins, maxs, ns)#note: this is currently not very Zygote-compatible
 	allpoints = map(getpoints, mins, maxs, ns)
 	h_itp_unscaled = Interpolations.interpolate(h, Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnCell()))))
 	h_itp = Interpolations.scale(h_itp_unscaled, reverse(allpoints)...)
