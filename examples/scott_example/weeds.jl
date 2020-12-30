@@ -85,8 +85,8 @@ using Distributed
 		logK_obser = logKs_true[obsnodes]
 		hmat = reshape(h_true, reverse(ns)...)
 		Ks = exp.(logKs)
-		vy = Ks .* vcat(fill(0.0, ns[1])', hmat[3:end, :] - hmat[1:end - 2, :], fill(0.0, ns[1])') / (2 * dx)
-		vx = Ks .* hcat(fill(0.0, ns[2]), hmat[:, 3:end] - hmat[:, 1:end - 2], fill(0.0, ns[2])) / (2 * dy)
+		vy = Ks .* vcat(fill(0.0, ns[1])', hmat[3:end, :] - hmat[1:end - 2, :], fill(0.0, ns[1])') / (2 * dy)
+		vx = Ks .* hcat(fill(0.0, ns[2]), hmat[:, 3:end] - hmat[:, 1:end - 2], fill(0.0, ns[2])) / (2 * dx)
 		vel_obser = map(i->sqrt(vx[i] ^ 2 + vy[i] ^ 2), obsnodes)
 
 		#set up the loss function
@@ -99,8 +99,8 @@ using Distributed
 			K_error = sum((logKs[obsnodes] - logK_obser) .^ 2 ./ logK_obssigma ^ 2)
 			Ks = exp.(logKs)
 			hmat = reshape(h, reverse(ns)...)
-			vy = Ks .* vcat(fill(0.0, ns[1])', hmat[3:end, :] - hmat[1:end - 2, :], fill(0.0, ns[1])') / (2 * dx)
-			vx = Ks .* hcat(fill(0.0, ns[2]), hmat[:, 3:end] - hmat[:, 1:end - 2], fill(0.0, ns[2])) / (2 * dy)
+			vy = Ks .* vcat(fill(0.0, ns[1])', hmat[3:end, :] - hmat[1:end - 2, :], fill(0.0, ns[1])') / (2 * dy)
+			vx = Ks .* hcat(fill(0.0, ns[2]), hmat[:, 3:end] - hmat[:, 1:end - 2], fill(0.0, ns[2])) / (2 * dx)
 			vel_pred = map(i->sqrt(vx[i] ^ 2 + vy[i] ^ 2), obsnodes)
 			vel_error = sum((vel_pred - vel_obser) .^ 2 ./ vel_obssigma ^ 2)
 			error_sys = alpha * h_error + beta * K_error + gamma * vel_error
