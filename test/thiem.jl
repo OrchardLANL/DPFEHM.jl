@@ -46,7 +46,7 @@ for i = 1:size(coords, 2)
 	end
 end
 print("steady state groundwater forward")
-@time h_gw = DPFEHM.groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; tol=1e-12)
+@time h_gw = DPFEHM.groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; reltol=1e-12)
 r0 = 0.1
 goodnodes = collect(filter(i->coords[2, i] == 0 && coords[1, i] > r0, 1:size(coords, 2)))
 rs = coords[1, goodnodes]
@@ -65,7 +65,7 @@ if doplot
 	PyPlot.close(fig)
 end
 @test isapprox(thiem_drawdowns, gw_drawdowns; rtol=1e-1)
-g_gw(Ks) = DPFEHM.groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; tol=1e-12)[goodnodes[round(Int, 0.25 * end)], end]
+g_gw(Ks) = DPFEHM.groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; reltol=1e-12)[goodnodes[round(Int, 0.25 * end)], end]
 print("groundwater gradient")
 @time grad_gw_zygote = Zygote.gradient(g_gw, Ks)[1]
 checkgradientquickly(g_gw, Ks, grad_gw_zygote, 3; delta=1e-8, rtol=1e-1)
