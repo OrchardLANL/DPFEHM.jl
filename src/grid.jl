@@ -1,6 +1,29 @@
+function darcy_velocity(h, Ks, mins, maxs, ns)#note: this is currently not very Zygote-compatible
+	allpoints = map(getpoints, mins, maxs, ns)
+	h_itp_unscaled = Interpolations.interpolate(h, Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnCell()))))
+	h_itp = Interpolations.scale(h_itp_unscaled, reverse(allpoints)...)
+	K_itp_unscaled = Interpolations.interpolate(Ks, Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnCell()))))
+	K_itp = Interpolations.scale(K_itp_unscaled, reverse(allpoints)...)
+	return (x...)->reverse(K_itp(x...) * Interpolations.gradient(h_itp, x...))
+end
+
 function getpoints(min, max, n)
 	return range(min, max; length=n)
 end
+
+function load_uge(filename)#based on https://www.pflotran.org/documentation/user_guide/cards/subsurface/grids/unstructured_explicit_grid.html?highlight=uge
+	lines = readlines(filename; keep=true)
+	numcells = Meta.parse(split(lines[1], '\t')[2])
+	cellinfo = DelimitedFiles.readdlm_string(foldl(*, lines[2:numcells + 1]), '\t', Float64, '\n', false, Dict())
+	coords = Array(cellinfo[:, 2:4]')
+	volumes = cellinfo[:, end]
+	connectioninfo = DelimitedFiles.readdlm_string(foldl(*, lines[numcells + 3:end]), '\t', Float64, '\n', false, Dict())
+	neighbors = [Int(connectioninfo[i, 1])=>Int(connectioninfo[i, 2]) for i = 1:size(connectioninfo, 1)]
+	areas = connectioninfo[:, end]
+	lengths = map(n->sqrt(sum((coords[j, n[1]] - coords[j, n[2]]) .^ 2 for j = 1:3)), neighbors)
+	return coords, volumes, areas, lengths
+end
+
 function regulargrid2d(mins, maxs, ns, dz)
 	linearindex = (i1, i2)->i2 + ns[2] * (i1 - 1)
 	coords = Array{Float64}(undef, 2, prod(ns))
@@ -70,13 +93,4 @@ function regulargrid3d(mins, maxs, ns)
 		end
 	end
 	return coords, neighbors, areasoverlengths, volumes
-end
-
-function darcy_velocity(h, Ks, mins, maxs, ns)#note: this is currently not very Zygote-compatible
-	allpoints = map(getpoints, mins, maxs, ns)
-	h_itp_unscaled = Interpolations.interpolate(h, Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnCell()))))
-	h_itp = Interpolations.scale(h_itp_unscaled, reverse(allpoints)...)
-	K_itp_unscaled = Interpolations.interpolate(Ks, Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnCell()))))
-	K_itp = Interpolations.scale(K_itp_unscaled, reverse(allpoints)...)
-	return (x...)->reverse(K_itp(x...) * Interpolations.gradient(h_itp, x...))
 end
