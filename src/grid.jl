@@ -21,7 +21,7 @@ function load_uge(filename)#based on https://www.pflotran.org/documentation/user
 	neighbors = [Int(connectioninfo[i, 1])=>Int(connectioninfo[i, 2]) for i = 1:size(connectioninfo, 1)]
 	areas = connectioninfo[:, end]
 	lengths = map(n->sqrt(sum((coords[j, n[1]] - coords[j, n[2]]) .^ 2 for j = 1:3)), neighbors)
-	return coords, volumes, areas, lengths
+	return coords, volumes, neighbors, areas, lengths
 end
 
 function regulargrid2d(mins, maxs, ns, dz)
