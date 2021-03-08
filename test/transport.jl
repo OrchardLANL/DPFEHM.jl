@@ -31,6 +31,7 @@ f_t(u, p, t) = zeros(length(u))
 function solveforu(vxs)
 	DifferentiableBackwardEuler.steps(u0, f, f_u, f_p, f_t, vxs, tspan[1], tspan[2]; abstol=1e-4, reltol=1e-4)
 end
+print("transport forward")
 @time u = solveforu(vxs)
 u1 = u[:, end]
 
@@ -51,9 +52,9 @@ if doplot
 	PyPlot.close(fig)
 end
 
-#=
 _, gradient_node = findmin(map(i->sum((coords[:, i] .- [1.5, 1.0, 0.0]) .^ 2), 1:size(coords, 2)))
 g = x->solveforu(x)[gradient_node, end]
+print("transport gradient")
 @time gradg = Zygote.gradient(g, vxs)[1]
 function checkgradientquickly(f, x0, gradf, n; delta::Float64=1e-8, kwargs...)
 	indicestocheck = sort(collect(1:length(x0)), by=i->abs(gradf[i]), rev=true)[1:n]
@@ -63,10 +64,7 @@ function checkgradientquickly(f, x0, gradf, n; delta::Float64=1e-8, kwargs...)
 		x[i] += delta
 		fval = f(x)
 		grad_f_i = (fval - f0) / delta
-		@show grad_f_i, gradf[i]
 		@test isapprox(gradf[i], grad_f_i; kwargs...)
 	end
 end
 checkgradientquickly(g, vxs, gradg, 3; atol=1e-4, rtol=1e-3)
-
-=#
