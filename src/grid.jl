@@ -24,6 +24,25 @@ function load_uge(filename)#based on https://www.pflotran.org/documentation/user
 	return coords, volumes, neighbors, areas, lengths
 end
 
+function regulargrid1d(mins, maxs, ns, dy, dz)
+	coords = Array{Float64}(undef, 1, prod(ns))
+	xs = getpoints(mins[1], maxs[1], ns[1])
+	dx = xs[2] - xs[1]
+	j = 1
+	neighbors = Array{Pair{Int, Int}}(undef, ns[1] - 1)
+	areasoverlengths = Array{Float64}(undef, ns[1] - 1)
+	volumes = fill(dx * dy * dz, ns[1])
+	areasoverlengths = fill(dy * dz / dx, ns[1])
+	for i1 = 1:ns[1]
+			coords[1, i1] = xs[i1]
+			if i1 < ns[1]
+				neighbors[j] = i1=>i1 + 1
+				j += 1
+			end
+	end
+	return coords, neighbors, areasoverlengths, volumes
+end
+
 function regulargrid2d(mins, maxs, ns, dz)
 	linearindex = (i1, i2)->i2 + ns[2] * (i1 - 1)
 	coords = Array{Float64}(undef, 2, prod(ns))

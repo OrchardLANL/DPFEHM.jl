@@ -15,5 +15,6 @@ include("grid.jl")
 include("groundwater.jl")
 include("RelPerm.jl")
 include("richards.jl")
+include("transport.jl")
 
 end
