@@ -11,15 +11,31 @@ function getpoints(min, max, n)
 	return range(min, max; length=n)
 end
 
-function load_uge(filename)#based on https://www.pflotran.org/documentation/user_guide/cards/subsurface/grids/unstructured_explicit_grid.html?highlight=uge
-	lines = readlines(filename; keep=true)
-	numcells = Meta.parse(split(lines[1], '\t')[2])
-	cellinfo = DelimitedFiles.readdlm_string(foldl(*, lines[2:numcells + 1]), '\t', Float64, '\n', false, Dict())
-	coords = Array(cellinfo[:, 2:4]')
-	volumes = cellinfo[:, end]
-	connectioninfo = DelimitedFiles.readdlm_string(foldl(*, lines[numcells + 3:end]), '\t', Float64, '\n', false, Dict())
-	neighbors = [Int(connectioninfo[i, 1])=>Int(connectioninfo[i, 2]) for i = 1:size(connectioninfo, 1)]
-	areas = connectioninfo[:, end]
+function load_uge(filename)
+	fuge = open(filename)
+	line = readline(fuge)
+	numcells= parse(Int, split(line)[2])
+	volumes = Array{Float64}(undef, numcells)
+	coords = Array{Float64}(undef, 3, numcells)
+	for i in 1:numcells
+		line = readline(fuge)
+		lineparts = split(line)
+		coords[1, i] = parse(Float64, lineparts[2])
+		coords[2, i] = parse(Float64, lineparts[3])
+		coords[3, i] = parse(Float64, lineparts[4])
+		volumes[i] = parse(Float64, lineparts[5])
+	end
+	line = readline(fuge)
+	numconnections = parse(Int, split(line)[2])
+	neighbors = Array{Pair{Int, Int}}(undef, numconnections)
+	areas = Array{Float64}(undef, numconnections)
+	for i in 1:numconnections
+		line = readline(fuge)
+		lineparts = split(line)
+		neighbors[i] = parse(Int, lineparts[1])=>parse(Int, lineparts[2])
+		areas[i] = parse(Float64, lineparts[6])
+	end
+	close(fuge)
 	lengths = map(n->sqrt(sum((coords[j, n[1]] - coords[j, n[2]]) .^ 2 for j = 1:3)), neighbors)
 	return coords, volumes, neighbors, areas, lengths
 end
