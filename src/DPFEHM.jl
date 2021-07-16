@@ -16,5 +16,6 @@ include("groundwater.jl")
 include("RelPerm.jl")
 include("richards.jl")
 include("transport.jl")
+include("utilities.jl")
 
 end
