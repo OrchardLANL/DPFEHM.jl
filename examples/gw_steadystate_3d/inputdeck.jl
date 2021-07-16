@@ -58,7 +58,9 @@ end
 
 #now do a forward solve for the head
 print("forward solve time")
-@time h = solveforh(logKs, dirichleths)#solve for the head
+@time hfree = solveforh(logKs, dirichleths)#solve for the head
+isfreenode, nodei2freenodei, freenodei2nodei = DPFEHM.getfreenodes(length(dirichleths), dirichletnodes)
+h = reshape(DPFEHM.addboundaryconditions(hfree, dirichletnodes, dirichleths, isfreenode, nodei2freenodei), reverse(ns)...)
 #plot the head at the bottom of the domain
 fig, ax = PyPlot.subplots()
 img = ax.imshow(h[1, :, :], origin="lower")
@@ -69,7 +71,7 @@ println()
 PyPlot.close(fig)
 
 #now compute the gradient of a function involving solveforh
-gradient_node = div(size(coords, 2), 2) + 500
+gradient_node = nodei2freenodei[div(size(coords, 2), 2) + 500]
 gradient_node_x = coords[1, gradient_node]
 gradient_node_y = coords[2, gradient_node]
 print("forward and gradient time")
