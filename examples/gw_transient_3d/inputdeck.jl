@@ -11,7 +11,7 @@ Random.seed!(0)
 
 #set up the grid
 mins = [0, 0, 0]; maxs = [50, 50, 5]#size of the domain, in meters
-ns = [100, 100, 10]#number of nodes on the grid
+ns = [50, 50, 5]#number of nodes on the grid
 coords, neighbors, areasoverlengths, volumes = DPFEHM.regulargrid3d(mins, maxs, ns)#build the grid
 
 #set up the boundary conditions
@@ -23,7 +23,7 @@ dirichleths = zeros(size(coords, 2))
 dirichleths[size(coords, 2)] = 0.0
 
 #set up the initial condition
-h0 = zeros(size(coords, 2))
+h0 = zeros(size(coords, 2) - length(dirichletnodes))
 
 #set up the conductivity field
 lambda = 50.0#meters -- correlation length of log-conductivity
@@ -61,7 +61,8 @@ function solveforh(logKs, dirichleths)
 	h_gw = DifferentiableBackwardEuler.steps(h0, f_gw, f_gw_u, f_gw_p, f_gw_t, p, 0.0, 1.0 * 60 * 60 * 24 * 365 * 10; abstol=1e-1, reltol=1e-1)
 	return h_gw
 end
-hflat2h3d(h) = reshape(h, reverse(ns)...)
+isfreenode, nodei2freenodei, freenodei2nodei = DPFEHM.getfreenodes(prod(ns), dirichletnodes)
+hfree2h3d(h) = reshape(DPFEHM.addboundaryconditions(h, dirichletnodes, dirichleths, isfreenode, nodei2freenodei), reverse(ns)...)
 
 function unpack(p)
 	@assert length(p) == length(neighbors) + size(coords, 2)
@@ -73,16 +74,16 @@ end
 #set up some functions needed by diffeq
 function f_gw(u, p, t)
 	Ks, dirichleths = unpack(p)
-	return DPFEHM.groundwater_residuals(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes)
+	return -DPFEHM.groundwater_residuals(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes)
 end
 function f_gw_u(u, p, t)
 	Ks, dirichleths = unpack(p)
-	return DPFEHM.groundwater_h(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes)
+	return -DPFEHM.groundwater_h(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes)
 end
 function f_gw_p(u, p, t)
 	Ks, dirichleths = unpack(p)
-	J1 = DPFEHM.groundwater_Ks(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes)
-	J2 = DPFEHM.groundwater_dirichleths(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes)
+	J1 = -DPFEHM.groundwater_Ks(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes)
+	J2 = -DPFEHM.groundwater_dirichleths(u, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes)
 	return hcat(J1, J2)
 end
 f_gw_t(u, p, t) = zeros(length(u))
@@ -92,7 +93,7 @@ print("forward solve time")
 @time h = solveforh(logKs, dirichleths)#solve for the head
 #plot the head at the bottom of the domain
 fig, ax = PyPlot.subplots()
-img = ax.imshow(hflat2h3d(h[:, end])[1, :, :], origin="lower")
+img = ax.imshow(hfree2h3d(h[:, end])[1, :, :], origin="lower")
 ax.title.set_text("Head")
 fig.colorbar(img)
 display(fig)
@@ -100,12 +101,12 @@ println()
 PyPlot.close(fig)
 
 #now compute the gradient of a function involving solveforh
-gradient_node = div(size(coords, 2), 2) + 500
+gradient_node = nodei2freenodei[div(size(coords, 2), 2) + 125]
 gradient_node_x = coords[1, gradient_node]
 gradient_node_y = coords[2, gradient_node]
 print("forward and gradient time")
-@time grad = Zygote.gradient((x, y)->hflat2h3d(solveforh(x, y)[:, end])[gradient_node], logKs, dirichleths)#calculate the gradient (which involves a redundant calculation of the forward pass)
-function_evaluation, back = Zygote.pullback((x, y)->hflat2h3d(solveforh(x, y)[:, end])[gradient_node], logKs, dirichleths)#this pullback thing lets us not redo the forward pass
+@time grad = Zygote.gradient((x, y)->hfree2h3d(solveforh(x, y)[:, end])[gradient_node], logKs, dirichleths)#calculate the gradient (which involves a redundant calculation of the forward pass)
+function_evaluation, back = Zygote.pullback((x, y)->hfree2h3d(solveforh(x, y)[:, end])[gradient_node], logKs, dirichleths)#this pullback thing lets us not redo the forward pass
 print("gradient time")
 @time grad = back(1.0)#compute the gradient of a function involving solveforh
 #plot the gradient of the function w.r.t. the logK at the bottom of the domain
