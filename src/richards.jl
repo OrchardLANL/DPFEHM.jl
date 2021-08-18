@@ -106,14 +106,14 @@ function ChainRulesCore.rrule(::typeof(richards_steadystate), psi0, Ks, neighbor
 		req_alphas = richards_alphas(args...)
 		req_Ns = richards_Ns(args...)
 		req_Qs = richards_Qs(args...)
-		return (ChainRulesCore.NO_FIELDS,#step function
+		return (ChainRulesCore.NoTangent(),#step function
 				@ChainRulesCore.thunk(zeros(length(psi0))),#psi0 -- should be insensitive to psi0
 				@ChainRulesCore.thunk(-(req_Ks' * lambda)),#Ks
-				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#neighbors
-				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#areasoverlengths
-				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#dirichletnodes
+				@ChainRulesCore.thunk(ChainRulesCore.NoTangent()),#neighbors
+				@ChainRulesCore.thunk(ChainRulesCore.NoTangent()),#areasoverlengths
+				@ChainRulesCore.thunk(ChainRulesCore.NoTangent()),#dirichletnodes
 				@ChainRulesCore.thunk(-(req_dirichletpsis' * lambda)),#dirichletpsis
-				@ChainRulesCore.thunk(ChainRulesCore.NO_FIELDS),#coords
+				@ChainRulesCore.thunk(ChainRulesCore.NoTangent()),#coords
 				@ChainRulesCore.thunk(-(req_alphas' * lambda)),#alphas
 				@ChainRulesCore.thunk(-(req_Ns' * lambda)),#Ns
 				@ChainRulesCore.thunk(-(req_Qs' * lambda)))#Qs
