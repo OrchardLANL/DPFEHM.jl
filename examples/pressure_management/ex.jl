@@ -54,7 +54,7 @@ global train_time = Float64[]
         sum(Qs .* ((collect(1:size(coords, 2)) .== i) for i in is))
     end
 
-    function solve_numerical(Qs, T, rs)
+    function solve_numerical(Qs, T)
         logKs2Ks_neighbors(Ks) = exp.(0.5 * (Ks[map(p->p[1], neighbors)] .+ Ks[map(p->p[2], neighbors)]))
         Qs = getQs(Qs, injection_extraction_nodes)
         @assert length(T) == length(Qs)
@@ -67,7 +67,7 @@ global train_time = Float64[]
 #=
 #not sure where this architecture came from
 model = Chain(
-    Conv((3, 3), 1=>8, pad=(1,1), relu), 
+    Conv((3, 3), 1=>8, pad=(1,1), relu),
     x -> maxpool(x, (2,2)),
     Conv((3, 3), 8=>16, pad=(1,1), relu),
     x -> maxpool(x, (2,2)),
@@ -84,9 +84,9 @@ model = Chain(Conv((5, 5), 1=>6, relu),
               Conv((5, 5), 6=>16, relu),
               MaxPool((2, 2)),
               flatten,
-              Dense(prod(1296), 120, relu), 
-              Dense(120, 84, relu), 
-              Dense(84, 1))
+              Dense(1296, 120, relu),
+              Dense(120, 84, relu),
+              Dense(84, 1)) |> f64
 
 #=
 #like vgg16 model
@@ -138,7 +138,7 @@ function loss(x)
     #@show size(Ts)
     Q1 = model(Ts)
     Qs = map(Q->[Q, Qinj], Q1)
-    loss = sum(map(i->solve_numerical(Qs[i], Ts[:, :, 1, i], rs) - targets[i], 1:size(Ts, 4)).^2)
+    loss = sum(map(i->solve_numerical(Qs[i], Ts[:, :, 1, i]) - targets[i], 1:size(Ts, 4)).^2)
     return loss
 end
 
@@ -149,7 +149,6 @@ Qinj = 0.031688 # [m^3/s] (1 MMT water/yr)
 # Training epochs
 epochs = 1:200
 # Calculate distance between extraction and injection wells
-rs = [sqrt((sum((cs-mon_well_crds[1]).^2))) for cs in well_crds]
 monitoring_well_node = 781
 @assert coords[:, monitoring_well_node] == [-80, -80]
 injection_extraction_nodes = [1041, 1821]
