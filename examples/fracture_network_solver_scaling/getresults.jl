@@ -15,6 +15,18 @@ include("utilities.jl")
 network_dirs = ["thomas_tpl_p2_x01", "thomas_tpl_p3_x01", "thomas_tpl_p5_x01", "thomas_tpl_p10_x01", "thomas_tpl_p20_x01"]
 network_dirs = [network_dirs; ["var_b_0.0", "var_b_0.5", "var_b_1.0"]]
 network_dirs = [network_dirs; ["TSA250_50"]]
+need_to_download_data = false
+for dir in network_dirs
+	if !isdir(dir)
+		need_to_download_data = true
+	end
+end
+if need_to_download_data
+	download("https://zenodo.org/record/5213727/files/results.tar.gz?download=1", "./results.tar.gz")
+	run(`tar xzf results.tar.gz`)
+	download("https://zenodo.org/record/5213727/files/meshes.tar.gz?download=1", "./meshes.tar.gz")
+	run(`tar xzf meshes.tar.gz`)
+end
 times = Dict()
 chs = Dict()
 for (i, network_dir) in enumerate(network_dirs)
