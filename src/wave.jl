@@ -162,33 +162,33 @@ function ChainRulesCore.rrule(::typeof(getuIters), c, f, nz, nx, nt, dz, dx, dt)
             push!(ds, (d1, d2, d3))
             ds = ds[2:end]
         end
-        return (ChainRulesCore.NO_FIELDS,#getuIters
+        return (ChainRulesCore.NoTangent(),#getuIters
                 dc,
                 df,
-                ChainRulesCore.NO_FIELDS,#nz
-                ChainRulesCore.NO_FIELDS,#nx
-                ChainRulesCore.NO_FIELDS,#nt
-                ChainRulesCore.NO_FIELDS,#dz
-                ChainRulesCore.NO_FIELDS,#dx
-                ChainRulesCore.NO_FIELDS)#dt
+                ChainRulesCore.NoTangent(),#nz
+                ChainRulesCore.NoTangent(),#nx
+                ChainRulesCore.NoTangent(),#nt
+                ChainRulesCore.NoTangent(),#dz
+                ChainRulesCore.NoTangent(),#dx
+                ChainRulesCore.NoTangent())#dt
     end
 end
 
 ## PULLBACK FUNCTIONS ####################
 function make_wave2diter_pullback(args...)
     function wave2diter_pullback(delta)
-		retval = (ChainRulesCore.NO_FIELDS,#function
+		retval = (ChainRulesCore.NoTangent(),#function
                 @ChainRulesCore.thunk(wave2diter_c(args...)' * delta),#c
 				@ChainRulesCore.thunk(wave2diter_f(args...)' * delta),#f
 				@ChainRulesCore.thunk(wave2diter_u(args...)' * delta),#u
 				@ChainRulesCore.thunk(wave2diter_uim1(args...)' * delta),#uim1
 				@ChainRulesCore.thunk(wave2diter_uim2(args...)' * delta),#uim2
-                ChainRulesCore.NO_FIELDS,#nz
-                ChainRulesCore.NO_FIELDS,#nx
-                ChainRulesCore.NO_FIELDS,#nt
-                ChainRulesCore.NO_FIELDS,#dz
-                ChainRulesCore.NO_FIELDS,#dx
-                ChainRulesCore.NO_FIELDS)#dt
+                ChainRulesCore.NoTangent(),#nz
+                ChainRulesCore.NoTangent(),#nx
+                ChainRulesCore.NoTangent(),#nt
+                ChainRulesCore.NoTangent(),#dz
+                ChainRulesCore.NoTangent(),#dx
+                ChainRulesCore.NoTangent())#dt
         return retval
     end
     return wave2diter_pullback
