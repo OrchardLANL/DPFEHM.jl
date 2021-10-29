@@ -20,13 +20,26 @@
 	end
 end
 
-function groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; kwargs...)
+function amg_solver(A, b; kwargs...)
+	ml = AlgebraicMultigrid.ruge_stuben(A)
+	hfree = AlgebraicMultigrid.solve(ml, b; kwargs...)
+	return hfree
+end
+
+function cholesky_solver(A, b; kwargs...)
+	Af = LinearAlgebra.cholesky(A)
+	hfree = Af \ b
+	return hfree
+end
+
+function groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; linear_solver::Function=amg_solver, kwargs...)
 	isfreenode, nodei2freenodei, freenodei2nodei = getfreenodes(length(Qs), dirichletnodes)
 	args = (zeros(sum(isfreenode)), Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, ones(length(Qs)), ones(length(Qs)))
 	b = -DPFEHM.groundwater_residuals(args...)
 	A = DPFEHM.groundwater_h(args...)
-	ml = AlgebraicMultigrid.ruge_stuben(A)
-	hfree = AlgebraicMultigrid.solve(ml, b; kwargs...)
+	hfree = linear_solver(A, b; kwargs...)
+	#ml = AlgebraicMultigrid.ruge_stuben(A)
+	#hfree = AlgebraicMultigrid.solve(ml, b; kwargs...)
 	h = map(i->isfreenode[i] ? hfree[nodei2freenodei[i]] : dirichleths[i], 1:length(Qs))
 	return h
 end

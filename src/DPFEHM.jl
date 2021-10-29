@@ -6,6 +6,7 @@ import ChainRulesCore
 import DelimitedFiles
 import ForwardDiff
 import Interpolations
+import LinearAlgebra
 import NLsolve
 import NonlinearEquations
 import SparseArrays
