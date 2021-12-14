@@ -195,4 +195,5 @@ end
 fig.tight_layout()
 display(fig)
 println()
+fig.savefig("porous_media_comparison.pdf")
 PyPlot.close(fig)
