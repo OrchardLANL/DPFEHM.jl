@@ -75,7 +75,7 @@ end
 	end
 end
 
-function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; kwargs...)
+function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; callback=soln->nothing, kwargs...)
 	args = (psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
 	function residuals!(residuals, psi)
 		myargs = (psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
@@ -89,8 +89,9 @@ function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletno
 	residuals0 = DPFEHM.richards_residuals(args...)
 	df = NLsolve.OnceDifferentiable(residuals!, jacobian!, psi0, residuals0, J0)
 	soln = NLsolve.nlsolve(df, psi0; kwargs...)
+	callback(soln)
 	if !NLsolve.converged(soln)
-		display(soln)
+		#display(soln)
 		error("solution did not converge")
 	end
 	return soln.zero
