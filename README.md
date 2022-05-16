@@ -42,7 +42,7 @@ The variable `Qs` describes fluid sources/sinks -- the amount of fluid injected 
 
 
 The final set-up step before moving on to solving the equations is to construct a heterogeneous conductivity field.
-Here, we use the package `GaussianRandomFields` to construct a conductivity field with a correlation length of 50 meters. The mean of the log-conductivity is `1e-4`meters/second (note that we use a natural logarithm when defining this), and the standard deviation of the log-conductivity is 1. `GaussianRandomFeilds` is used to construct a field in 2 dimensions and then it is copied through each of the layers, so that the heterogeneity only exists in the x and y coordinate directions, but not in the z direction.
+Here, we use the package `GaussianRandomFields` to construct a conductivity field with a correlation length of 50 meters. The mean of the log-conductivity is `1e-4`meters/second (note that we use a natural logarithm when defining this), and the standard deviation of the log-conductivity is 1. `GaussianRandomFields` is used to construct a field in 2 dimensions and then it is copied through each of the layers, so that the heterogeneity only exists in the x and y coordinate directions, but not in the z direction.
 ```julia
 lambda = 50.0#meters -- correlation length of log-conductivity
 sigma = 1.0#standard deviation of log-conductivity
@@ -58,7 +58,10 @@ for i = 1:ns[3]#copy the 2d field to each of the 3d layers
 	v = view(logKs, i, :, :)
 	v .= logKs2d
 end
+```
+The conductivity field is shown:
 
+![Conductivity field](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/examples/gw_steadystate_3d/conductivity.png)
 <!--
 #plot the log-conductivity
 fig, ax = PyPlot.subplots()
@@ -85,6 +88,9 @@ With this function in hand, we can solve the problem using the `solveforh` wrapp
 ```julia
 h = solveforh(logKs, dirichleths)#solve for the head
 ```
+The head at the bottom layer of the domain is shown (note the pressure is higher in the lower corner, where there is fluid injection, than in the rest of the domain):
+
+![Head field](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/examples/gw_steadystate_3d/head.png)
 <!--
 #plot the head at the bottom of the domain
 fig, ax = PyPlot.subplots()
@@ -107,7 +113,9 @@ function_evaluation, back = Zygote.pullback((x, y)->solveforh(x, y)[gradient_nod
 print("gradient time")
 grad2 = back(1.0)#compute the gradient of a function involving solveforh using Zygote.pullback
 ```
-Note that the function `DPFEHM.getfreenodes` allows one to map indices between the free nodes (i.e., the ones that do not have fixed-pressure boundary conditions) and all nodes.
+Note that the function `DPFEHM.getfreenodes` allows one to map indices between the free nodes (i.e., the ones that do not have fixed-pressure boundary conditions) and all nodes. The gradient of `logK` at the bottom layer of the domain is shown:
+
+![Gradient field](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/examples/gw_steadystate_3d/gradient.png)
 <!--
 #plot the gradient of the function w.r.t. the logK at the bottom of the domain
 fig, ax = PyPlot.subplots()
