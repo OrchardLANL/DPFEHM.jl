@@ -61,8 +61,7 @@ end
 ```
 The conductivity field is shown:
 
-![Conductivity field](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/
-/gw_steadystate_3d/conductivity.png)
+![Conductivity field](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/examples/gw_steadystate_3d/conductivity.png)
 <!--
 #plot the log-conductivity
 fig, ax = PyPlot.subplots()
