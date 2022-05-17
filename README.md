@@ -8,7 +8,7 @@ The [examples](https://github.com/OrchardLANL/DPFEHM.jl/tree/master/examples) ar
 
 ## Basic Usage
 
-### Single phase flow
+### [Steady-state Single phase flow](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/gw_steadystate_3d/inputdeck.jl)
 Here, we solve a steady-state single phase flow problem . Let's start by importing several libraries that we will use.
 
 ```julia
