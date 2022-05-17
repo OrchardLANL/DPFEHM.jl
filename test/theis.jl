@@ -123,9 +123,11 @@ function f_richards_p(u, p, t)
 end
 f_richards_t(u, p, t) = zeros(length(u))
 print("richards forward")
-h0 = fill(steadyhead, size(coords, 2))
+h0 = fill(steadyhead, size(coords, 2) - length(dirichletnodes))
 @time h_richards = DifferentiableBackwardEuler.steps_diffeq(h0, f_richards, f_richards_u, f_richards_p, f_richards_t, p, t0, tfinal; abstol=1e-6, reltol=1e-6)
-richards_drawdowns = -h_richards[end][goodnodes] .+ steadyhead
+isfreenode, nodei2freenodei, freenodei2nodei = DPFEHM.getfreenodes(length(Qs), dirichletnodes)
+richards_dpfehm_solution = map(h->DPFEHM.addboundaryconditions(h, dirichletnodes, dirichleths, isfreenode, nodei2freenodei), h_richards.u)
+richards_drawdowns = -richards_dpfehm_solution[end][goodnodes] .+ steadyhead
 if doplot
 	fig, ax = PyPlot.subplots()
 	ax.plot(rs, theis_drawdowns, "r.", ms=20, label="Theis")

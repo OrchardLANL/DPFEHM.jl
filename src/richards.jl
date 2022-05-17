@@ -55,28 +55,30 @@ function effective_saturation(alpha::Number, psi::Number, N::Number)
 end
 
 @NonlinearEquations.equations exclude=(coords, dirichletnodes, neighbors, areasoverlengths) function richards(psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, specificstorage, volumes)
-	NonlinearEquations.setnumequations(length(psi))
-	dirichletnodes_set = Set(dirichletnodes)
-	for i = 1:length(psi)
-		if i in dirichletnodes_set
-			NonlinearEquations.addterm(i, psi[i] - dirichletpsis[i])
-		else
-			NonlinearEquations.addterm(i, Qs[i] / (specificstorage[i] * volumes[i]))
+	isfreenode, nodei2freenodei, freenodei2nodei = getfreenodes(length(Qs), dirichletnodes)
+	NonlinearEquations.setnumequations(sum(isfreenode))
+	for i = 1:length(Qs)
+		if isfreenode[i]
+			j = nodei2freenodei[i]
+			NonlinearEquations.addterm(j, Qs[i] / (specificstorage[i] * volumes[i]))
 		end
 	end
 	for (i, (node_a, node_b)) in enumerate(neighbors)
 		for (node1, node2) in [(node_a, node_b), (node_b, node_a)]
-			if !(node1 in dirichletnodes_set) && !(node2 in dirichletnodes_set)
-				NonlinearEquations.addterm(node1, hm(kr(psi[node1], alphas[i], Ns[i]), kr(psi[node2], alphas[i], Ns[i])) * Ks[i] * (psi[node2] + coords[3, node2] - psi[node1] - coords[3, node1]) * areasoverlengths[i] / (specificstorage[node1] * volumes[node1]))
-			elseif !(node1 in dirichletnodes_set) && node2 in dirichletnodes_set
-				NonlinearEquations.addterm(node1, hm(kr(psi[node1], alphas[i], Ns[i]), kr(dirichletpsis[node2], alphas[i], Ns[i])) * Ks[i] * (dirichletpsis[node2] + coords[3, node2] - psi[node1] - coords[3, node1]) * areasoverlengths[i] / (specificstorage[node1] * volumes[node1]))
+			j1 = nodei2freenodei[node1]
+			if isfreenode[node1]  && isfreenode[node2]
+				j2 = nodei2freenodei[node2]
+				NonlinearEquations.addterm(j1, hm(kr(psi[j1], alphas[i], Ns[i]), kr(psi[j2], alphas[i], Ns[i])) * Ks[i] * (psi[j2] + coords[3, node2] - psi[j1] - coords[3, node1]) * areasoverlengths[i] / (specificstorage[node1] * volumes[node1]))
+			elseif isfreenode[node1] && !isfreenode[node2]
+				NonlinearEquations.addterm(j1, hm(kr(psi[j1], alphas[i], Ns[i]), kr(dirichletpsis[node2], alphas[i], Ns[i])) * Ks[i] * (dirichletpsis[node2] + coords[3, node2] - psi[j1] - coords[3, node1]) * areasoverlengths[i] / (specificstorage[node1] * volumes[node1]))
 			end
 		end
 	end
 end
 
 function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; callback=soln->nothing, kwargs...)
-	args = (psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+	isfreenode, nodei2freenodei, freenodei2nodei = getfreenodes(length(Qs), dirichletnodes)
+	args = (psi0[isfreenode], Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
 	function residuals!(residuals, psi)
 		myargs = (psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
 		copy!(residuals, DPFEHM.richards_residuals(myargs...))
@@ -94,7 +96,9 @@ function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletno
 		#display(soln)
 		error("solution did not converge")
 	end
-	return soln.zero
+	psifree = soln.zero
+	psi = map(i->isfreenode[i] ? psifree[nodei2freenodei[i]] : dirichletpsis[i], 1:length(Qs))
+	return psi
 end
 
 function ChainRulesCore.rrule(::typeof(richards_steadystate), psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; kwargs...)
