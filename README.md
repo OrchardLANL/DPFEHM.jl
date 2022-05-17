@@ -4,11 +4,11 @@
 
 DPFEHM is a [Julia](http://julialang.org/) module that includes differentiable numerical models for fluid flows in the Earth's subsurface. Currently it supports single phase flow and limited two-phase flow via the Richards equation.
 
-The [examples](https://github.com/OrchardLANL/DPFEHM.jl/tree/master/examples) are a good place to get started to see how to use DPFEHM.
-
 ## Basic Usage
 
-### [Steady-state Single phase flow](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/gw_steadystate_3d/inputdeck.jl)
+The [examples](https://github.com/OrchardLANL/DPFEHM.jl/tree/master/examples) are a good place to get started to see how to use DPFEHM. Two examples will be described in detail here that illustrate the basic usage patterns via an examples of steady-state single-phase flow and transient Richards equation.
+
+### [Steady-state single-phase flow](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/gw_steadystate_3d/inputdeck.jl)
 Here, we solve a steady-state single phase flow problem . Let's start by importing several libraries that we will use.
 
 ```julia
@@ -61,7 +61,8 @@ end
 ```
 The conductivity field is shown:
 
-![Conductivity field](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/examples/gw_steadystate_3d/conductivity.png)
+![Conductivity field](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/
+/gw_steadystate_3d/conductivity.png)
 <!--
 #plot the log-conductivity
 fig, ax = PyPlot.subplots()
@@ -128,6 +129,9 @@ println()
 PyPlot.close(fig)
 -->
 
+## Advanced usage
+
+The [examples](https://github.com/OrchardLANL/DPFEHM.jl/tree/master/examples) provide guidance on more advanced usage including [inverse problems](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/gw_multigrid_inverse/inputdeck.jl), [combining DPFEHM with a neural network](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/pressure_management/ex.jl), [flow on discrete fracture networks](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/fracture_network_solver_scaling/plots_for_paper.jl), as well as solving the [advection-dispersion](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/transport/ex.jl) and [wave](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/wave_propagation_2d/ex.jl) equations.
 
 ## License
 
