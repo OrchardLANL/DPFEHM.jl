@@ -2,7 +2,7 @@
 
 ## Description
 
-DPFEHM is a [Julia](http://julialang.org/) module that includes differentiable numerical models for fluid flows in the Earth's subsurface. Currently it supports single phase flow and limited two-phase flow via the Richards equation.
+DPFEHM is a [Julia](http://julialang.org/) module that includes differentiable numerical models with a focus on fluid flow and transport in the Earth's subsurface. Currently it supports the groundwater flow equations (single phase flow), Richards equation (air/water), the advection-dispersion equation, and the 2d wave equation.
 
 ## Basic Usage
 
