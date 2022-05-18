@@ -112,8 +112,7 @@ print("gradient time")
 @time grad = back(1.0)#compute the gradient of a function involving solveforh
 #plot the gradient of the function w.r.t. the logK at the bottom of the domain
 fig, ax = PyPlot.subplots()
-# TODO: Added a minus sign to the gradient
-img = ax.imshow(-grad[1][1, :, :], origin="lower", extent=[mins[1], maxs[1], mins[2], maxs[2]])
+img = ax.imshow(grad[1][1, :, :], origin="lower", extent=[mins[1], maxs[1], mins[2], maxs[2]])
 ax.plot([gradient_node_x], [gradient_node_y], "r.", ms=10, alpha=0.5)
 ax.title.set_text("Gradient of head at dot w.r.t. logK at bottom of domain")
 fig.colorbar(img)
