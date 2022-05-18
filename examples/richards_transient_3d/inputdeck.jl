@@ -1,8 +1,6 @@
-import ChainRulesCore
 import DifferentiableBackwardEuler
 import DPFEHM
 import GaussianRandomFields
-import Optim
 import PyPlot
 import Random
 import Zygote
@@ -99,6 +97,7 @@ ax.title.set_text("Head")
 fig.colorbar(img)
 display(fig)
 println()
+fig.savefig("head.png")
 PyPlot.close(fig)
 
 #now compute the gradient of a function involving solveforh
@@ -118,4 +117,5 @@ ax.title.set_text("Gradient of head at dot w.r.t. logK at bottom of domain")
 fig.colorbar(img)
 display(fig)
 println()
+fig.savefig("gradient.png")
 PyPlot.close(fig)
