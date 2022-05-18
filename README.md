@@ -248,6 +248,7 @@ display(fig)
 println()
 PyPlot.close(fig)
 -->
+![Pressure](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/examples/richards_transient_3d/head.png)
 
 Finally, we can compute the gradient of functions involving the solution of these equations using `Zygote.gradient` or `Zygote.pullback`.
 ```julia
@@ -255,8 +256,7 @@ hflat2h3d(h) = reshape(h, reverse(ns)...)
 gradient_node = div(size(coords, 2) + ns[3] * ns[2], 2)
 gradient_node_x = coords[1, gradient_node]
 gradient_node_y = coords[2, gradient_node]
-print("forward and gradient time")
-@time grad = Zygote.gradient((x, y)->hflat2h3d(solveforh(x, y)[:, end])[gradient_node], logKs, dirichleths)#calculate the gradient (which involves a redundant calculation of the forward pass)
+grad = Zygote.gradient((x, y)->hflat2h3d(solveforh(x, y)[:, end])[gradient_node], logKs, dirichleths)#calculate the gradient (which involves a redundant calculation of the forward pass)
 ```
 <!--
 function_evaluation, back = Zygote.pullback((x, y)->hflat2h3d(solveforh(x, y)[:, end])[gradient_node], logKs, dirichleths)#this pullback thing lets us not redo the forward pass
@@ -272,6 +272,7 @@ display(fig)
 println()
 PyPlot.close(fig)
 -->
+![Gradient](https://raw.githubusercontent.com/OrchardLANL/DPFEHM.jl/master/examples/richards_transient_3d/gradient.png)
 
 ## Advanced usage
 
