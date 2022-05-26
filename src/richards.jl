@@ -13,8 +13,8 @@ end
 
 kr(x::AbstractArray) = kr(x[1], x[2], x[3])
 
-function Calculus.differentiate(x::Calculus.SymbolParameter{:kr}, args, wrt)
-	chain_part = map(x->Calculus.simplify(Calculus.differentiate(x, wrt)), args)
+function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculus.SymbolParameter{:kr}, args, wrt)
+	chain_part = map(x->Calculus.simplify(NonlinearEquations.Calculus.differentiate(x, wrt)), args)
 	if chain_part == [0, 0, 0]
 		return :(0)
 	else
@@ -28,8 +28,8 @@ end
 
 hm(x::AbstractArray) = hm(x[1], x[2])
 
-function Calculus.differentiate(x::Calculus.SymbolParameter{:hm}, args, wrt)
-	chain_part = map(x->Calculus.simplify(Calculus.differentiate(x, wrt)), args)
+function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculus.SymbolParameter{:hm}, args, wrt)
+	chain_part = map(x->NonlinearEquations.Calculus.simplify(NonlinearEquations.Calculus.differentiate(x, wrt)), args)
 	if chain_part == [0, 0]
 		return :(0)
 	else
@@ -37,12 +37,12 @@ function Calculus.differentiate(x::Calculus.SymbolParameter{:hm}, args, wrt)
 	end
 end
 
-function Calculus.differentiate(x::Calculus.SymbolParameter{:abs}, args, wrt)
+function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculus.SymbolParameter{:abs}, args, wrt)
 	if length(args) > 1
 		error("Too many arguments passed to abs()")
 	end
 	arg = args[1]
-	return :(ifelse($arg > 0, 1, -1) * $(Calculus.differentiate(arg, wrt)))
+	return :(ifelse($arg > 0, 1, -1) * $(NonlinearEquations.Calculus.differentiate(arg, wrt)))
 end
 
 function effective_saturation(alpha::Number, psi::Number, N::Number)
