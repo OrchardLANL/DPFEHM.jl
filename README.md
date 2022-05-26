@@ -276,7 +276,7 @@ PyPlot.close(fig)
 
 ## Advanced usage
 
-The [examples](https://github.com/OrchardLANL/DPFEHM.jl/tree/master/examples) provide illustrate more advanced usage including [inverse problems](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/gw_multigrid_inverse/inputdeck.jl), [combining DPFEHM with a neural network](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/pressure_management/ex.jl), [flow on discrete fracture networks](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/fracture_network_solver_scaling/plots_for_paper.jl), as well as solving the [advection-dispersion](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/transport/ex.jl) and [wave](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/wave_propagation_2d/ex.jl) equations.
+The [examples](https://github.com/OrchardLANL/DPFEHM.jl/tree/master/examples) illustrate more advanced usage including [inverse problems](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/gw_multigrid_inverse/inputdeck.jl), [combining DPFEHM with a neural network](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/pressure_management/ex.jl), [flow on discrete fracture networks](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/fracture_network_solver_scaling/plots_for_paper.jl), as well as solving the [advection-dispersion](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/transport/ex.jl) and [wave](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/wave_propagation_2d/ex.jl) equations.
 
 ## License
 
