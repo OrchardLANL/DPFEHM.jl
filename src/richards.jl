@@ -14,7 +14,7 @@ end
 kr(x::AbstractArray) = kr(x[1], x[2], x[3])
 
 function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculus.SymbolParameter{:kr}, args, wrt)
-	chain_part = map(x->Calculus.simplify(NonlinearEquations.Calculus.differentiate(x, wrt)), args)
+	chain_part = map(x->NonlinearEquations.Calculus.simplify(NonlinearEquations.Calculus.differentiate(x, wrt)), args)
 	if chain_part == [0, 0, 0]
 		return :(0)
 	else

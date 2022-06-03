@@ -1,7 +1,6 @@
 module DPFEHM
 
 import AlgebraicMultigrid
-import Calculus
 import ChainRulesCore
 import DelimitedFiles
 import ForwardDiff
