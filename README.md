@@ -4,6 +4,13 @@
 
 DPFEHM is a [Julia](http://julialang.org/) module that includes differentiable numerical models with a focus on fluid flow and transport in the Earth's subsurface. Currently it supports the groundwater flow equations (single phase flow), Richards equation (air/water), the advection-dispersion equation, and the 2d wave equation.
 
+## Installation
+You can install DPFEHM within Julia by running
+```julia
+import Pkg
+Pkg.add("DPFEHM")
+```
+
 ## Basic Usage
 
 The [examples](https://github.com/OrchardLANL/DPFEHM.jl/tree/master/examples) are a good place to get started to see how to use DPFEHM. Two examples will be described in detail here that illustrate the basic usage patterns via an examples of steady-state single-phase flow and transient Richards equation.
