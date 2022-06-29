@@ -1,8 +1,8 @@
-# DPFEHM: A Differentiable Subsurface Flow Simulator
+# DPFEHM: A Differentiable Subsurface Physics Simulator
 
 ## Description
 
-DPFEHM is a [Julia](http://julialang.org/) module that includes differentiable numerical models with a focus on fluid flow and transport in the Earth's subsurface. Currently it supports the groundwater flow equations (single phase flow), Richards equation (air/water), the advection-dispersion equation, and the 2d wave equation.
+DPFEHM is a [Julia](http://julialang.org/) module that includes differentiable numerical models with a focus on the Earth's subsurface, especially fluid flow. Currently it supports the groundwater flow equations (single phase flow), Richards equation (air/water), the advection-dispersion equation, and the 2d wave equation.
 
 ## Installation
 You can install DPFEHM within Julia by running
