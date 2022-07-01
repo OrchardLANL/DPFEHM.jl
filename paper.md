@@ -50,7 +50,7 @@ One of the key features of `DPFEHM` is that it supports automatic differentiatio
 
 # Statement of need
 
-Numerical models of subsurface flow and transport such as MODFLOW [@harbaugh2005modflow], FEHM [@zyvoloski1997summary}, PFLOTRAN [@lichtner2015pflotran], etc. are ubiquitous, but these models cannot be efficiently integrated with machine learning frameworks.
+Numerical models of subsurface flow and transport such as MODFLOW [@harbaugh2005modflow], FEHM [@zyvoloski1997summary], PFLOTRAN [@lichtner2015pflotran], etc. are ubiquitous, but these models cannot be efficiently integrated with machine learning frameworks.
 They cannot because they do not support automatic differentation, which is needed for the gradient-based optimization methods that are ubiquitous in machine learning workflows.
 An automatically-differentiable model like `DPFEHM` can be seamlessly integrated into these machine learning workflows.
 This enables machine learning workflows with `DPFEHM` in the loop, e.g., to learn to manage pressure in a scenario where wastewater or carbon dioxide are being injected into the subsurface [@pachalieva2022physics].
@@ -67,7 +67,7 @@ By contrast, `DPFEHM` does not require any training -- just a description of the
 `DPFEHM` was designed to be a research tool to explore the interface between numerical models and machine learning models.
 To date, it has been used in several publications including [@greer2022comparison,@wu2022inverse,@pachalieva2022physics].
 
-#Installation
+# Installation
 
 `DPFEHM` can be installed from within Julia by running `import Pkg; Pkg.add("DPFEHM")`.
 The installation can subsequently be tested by running `Pkg.test("DPFEHM")`.
@@ -75,5 +75,6 @@ The installation can subsequently be tested by running `Pkg.test("DPFEHM")`.
 # Acknowledgements
 
 This project was supported by Los Alamos National Laboratory LDRD project 20200575ECR.
+S. Y. Greer acknowledges support from the United States Department of Energy through the Computational Science Graduate Fellowship (DOE CSGF) under grant number DE-SC0019323.
 
 # References
