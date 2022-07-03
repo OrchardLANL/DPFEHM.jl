@@ -16,10 +16,10 @@ authors:
     affiliation: "1, 2"
   - name: Aleksandra Pachalieva
     orcid: 0000-0003-1246-0410
-	affiliation: 1
+    affiliation: 1
   - name: Wu Hao
     orcid: 0000-0002-9402-7401
-	affiliation: 1
+    affiliation: 1
   - name: Dylan Harp
     orcid: 0000-0001-9777-8000
     affiliation: 3
