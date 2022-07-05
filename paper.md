@@ -48,6 +48,7 @@ Simulating the physical processes that occur in the Earth's subsurface with comp
 `DPFEHM` is able to solve the groundwater flow equations (single phase flow), Richards equation (air/water), the advection-dispersion equation, and the 2d wave equation.
 One of the key features of `DPFEHM` is that it supports automatic differentiation, so it can be integrated into machine learning workflows using frameworks such as Flux or PyTorch.
 
+
 # Statement of need
 
 Numerical models of subsurface flow and transport such as MODFLOW [@harbaugh2005modflow], FEHM [@zyvoloski1997summary], PFLOTRAN [@lichtner2015pflotran], etc. are ubiquitous, but these models cannot be efficiently integrated with machine learning frameworks.
@@ -66,6 +67,13 @@ By contrast, `DPFEHM` does not require any training -- just a description of the
 
 `DPFEHM` was designed to be a research tool to explore the interface between numerical models and machine learning models.
 To date, it has been used in several publications including [@greer2022comparison,@wu2022inverse,@pachalieva2022physics].
+`DPFEHM` uses a two-point flux approximation finite volume scheme.
+This means that an orthogonal grid is required to ensure convergence, similar to other codes such as FEHM and PFLOTRAN
+Alternative codes such as Amanzi-ATS [@mercer2020amanzi], which use a more advanced mimetic finite difference discretization, do not require orthogonal meshes.
+The performance advantage for `DPFEHM` over non-differentiable alternatives such as those mentioned previously comes in computing the gradient of a function that involves the solution of a subsurface physics equation.
+In these settings, the cost of computing a gradient with `DPFEHM` is typically around the cost of running two physics simulations.
+For non-differentiable models, the cost is equal to performing a number of simulations that is proportional to the number of parameters -- exorbitant when the number of parameters is large.
+This is important for subsurface physics, because there is often one or more parameters at each node in the mesh.
 
 # Installation
 
