@@ -1,3 +1,6 @@
+#This solves the richards equations for a heterogeneous permeability field with an anisotropic covariance function.
+#There is a fluid source in the top middle of the domain and the medium is saturated at the bottom of the domain.
+#Gravity pulls the fluid from the top toward the bottom.
 import DPFEHM
 import GaussianRandomFields
 import Optim
@@ -20,10 +23,10 @@ maxs = [100, 10]#meters
 #ns = [11, 11]
 #ns = [21, 21]
 #ns = [51, 51]
-#ns = [101, 101]
+ns = [101, 101]
 #ns = [201, 201]
 #ns = [401, 401]
-ns = [801, 801]
+#ns = [801, 801]
 num_eigenvectors = 200
 x_true = randn(num_eigenvectors)
 x0 = zeros(num_eigenvectors)
