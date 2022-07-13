@@ -1,3 +1,7 @@
+#This example trains a neural network to manage the pressure in an underground reservoir.
+#The ML model gets to control the pumping rate at an extraction well.
+#It's goal is to manage the pressure at a critical location so the pressure increase caused by a fixed injection at another well is mitigated by the extraction.
+#It uses a subsurface flow model in the loop to train a convolutional neural network to predict the extraction rate given a permeability field.
 using ChainRulesCore: length
 import DPFEHM
 import GaussianRandomFields
@@ -83,7 +87,7 @@ model = Chain(Conv((5, 5), 1=>6, relu),
               MaxPool((2, 2)),
               Conv((5, 5), 6=>16, relu),
               MaxPool((2, 2)),
-              flatten,
+              Flux.flatten,
               Dense(1296, 120, relu),
               Dense(120, 84, relu),
               Dense(84, 1)) |> f64
@@ -130,7 +134,7 @@ model = Chain(Conv((3, 3), 1 => 64, relu, pad=(1, 1), stride=(1, 1)),
 =#
 
 # Make neural network parameters trackable by Flux
-θ = params(model)
+θ = Flux.params(model)
 
 function loss(x)
     Ts = reshape(hcat(map(y->y[1], x)...), size(x[1][1], 1), size(x[1][1], 2), 1, length(x))
