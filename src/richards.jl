@@ -89,8 +89,8 @@ function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletno
 	end
 	J0 = DPFEHM.richards_psi(args...)
 	residuals0 = DPFEHM.richards_residuals(args...)
-	df = NLsolve.OnceDifferentiable(residuals!, jacobian!, psi0, residuals0, J0)
-	soln = NLsolve.nlsolve(df, psi0; kwargs...)
+	df = NLsolve.OnceDifferentiable(residuals!, jacobian!, psi0[isfreenode], residuals0, J0)
+	soln = NLsolve.nlsolve(df, psi0[isfreenode]; kwargs...)
 	callback(soln)
 	if !NLsolve.converged(soln)
 		#display(soln)
@@ -102,10 +102,11 @@ function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletno
 end
 
 function ChainRulesCore.rrule(::typeof(richards_steadystate), psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; kwargs...)
+	isfreenode, nodei2freenodei, freenodei2nodei = getfreenodes(length(Qs), dirichletnodes)
 	psi = richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; kwargs...)
 	function pullback(delta)
-		args = (psi, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
-		lambda = richards_psi(args...)' \ delta
+		args = (psi[isfreenode], Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
+		lambda = richards_psi(args...)' \ delta[isfreenode]
 		req_Ks = richards_Ks(args...)
 		req_dirichletpsis = richards_dirichletpsis(args...)
 		req_alphas = richards_alphas(args...)
@@ -117,7 +118,7 @@ function ChainRulesCore.rrule(::typeof(richards_steadystate), psi0, Ks, neighbor
 				@ChainRulesCore.thunk(ChainRulesCore.NoTangent()),#neighbors
 				@ChainRulesCore.thunk(ChainRulesCore.NoTangent()),#areasoverlengths
 				@ChainRulesCore.thunk(ChainRulesCore.NoTangent()),#dirichletnodes
-				@ChainRulesCore.thunk(-(req_dirichletpsis' * lambda)),#dirichletpsis
+				@ChainRulesCore.thunk(-(req_dirichletpsis' * lambda) .+ delta .* (map(x->!x, isfreenode))),#dirichletpsis
 				@ChainRulesCore.thunk(ChainRulesCore.NoTangent()),#coords
 				@ChainRulesCore.thunk(-(req_alphas' * lambda)),#alphas
 				@ChainRulesCore.thunk(-(req_Ns' * lambda)),#Ns

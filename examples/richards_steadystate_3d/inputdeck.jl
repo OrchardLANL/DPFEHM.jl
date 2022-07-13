@@ -1,3 +1,5 @@
+#This example solves a simple richards equation problem with a heterogeneous permeability field.
+#Then it computes the gradient with respect to permeability of a function invovling the solution of richards equation.
 import DPFEHM
 import GaussianRandomFields
 import Optim

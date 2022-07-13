@@ -66,6 +66,37 @@ if doplot
 end
 @test isapprox(thiem_drawdowns, gw_drawdowns; rtol=1e-1)
 g_gw(Ks) = DPFEHM.groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; reltol=1e-12)[goodnodes[round(Int, 0.25 * end)], end]
-print("groundwater gradient")
+print("steady state groundwater gradient")
+@time grad_gw_zygote = Zygote.gradient(g_gw, Ks)[1]
+checkgradientquickly(g_gw, Ks, grad_gw_zygote, 3; delta=1e-8, rtol=1e-1)
+
+#test Thiem solution against richards equation
+print("steady state richards forward")
+coords_richards = vcat(coords, zeros(size(coords, 2))')
+alphas = fill(0.5, length(neighbors))
+Ns = fill(1.25, length(neighbors))
+h0 = fill(steadyhead, size(coords_richards, 2))
+@time h_gw = DPFEHM.richards_steadystate(h0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, coords_richards, alphas, Ns, Qs)
+r0 = 0.1
+goodnodes = collect(filter(i->coords_richards[2, i] == 0 && coords[1, i] > r0, 1:size(coords_richards, 2)))
+rs = coords_richards[1, goodnodes]
+T = thickness * k
+thiem_drawdowns = thiem.(R, rs, T, Q)
+richards_drawdowns = -h_gw[goodnodes] .+ steadyhead
+if doplot
+	fig, ax = PyPlot.subplots()
+	ax.plot(rs, thiem_drawdowns, "r.", ms=20, label="Thiem")
+	ax.plot(rs, richards_drawdowns, "k", linewidth=3, label="DPFEHM richards")
+	ax.set_xlabel("x [m]")
+	ax.set_ylabel("drawdown [m]")
+	ax.legend()
+	display(fig)
+	println()
+	PyPlot.close(fig)
+end
+@test isapprox(thiem_drawdowns, richards_drawdowns; rtol=1e-1)
+@test isapprox(gw_drawdowns, richards_drawdowns; rtol=1e-4)
+g_gw(Ks) = DPFEHM.richards_steadystate(h0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, coords_richards, alphas, Ns, Qs)[goodnodes[round(Int, 0.25 * end)], end]
+print("steady state richards gradient")
 @time grad_gw_zygote = Zygote.gradient(g_gw, Ks)[1]
 checkgradientquickly(g_gw, Ks, grad_gw_zygote, 3; delta=1e-8, rtol=1e-1)
