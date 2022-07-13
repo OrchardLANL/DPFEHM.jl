@@ -1,3 +1,6 @@
+#This example performs an inverse analysis using multiple grids.
+#It starts by performing an inverse analysis on a coarse grid, estimating the coefficients of the eigenvectors of the parameter covariance matrix
+#Then, it proceeds to solve the inverse problem on increasingly fine grids.
 import DPFEHM
 import GaussianRandomFields
 import Optim
@@ -6,6 +9,10 @@ import Random
 import Zygote
 
 Random.seed!(0)
+
+if !isdir("figs")
+	mkdir("figs")
+end
 
 function getobsnodes(coords, obslocs)
 	obsnodes = Array{Int}(undef, length(obslocs))
