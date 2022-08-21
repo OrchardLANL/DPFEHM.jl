@@ -1,3 +1,5 @@
+#this example produces the results form this paper: https://doi.org/10.1029/2021WR031188
+#it solves a variety of discrete fracture network flow problems using a variety of linear solvers and preconditioners
 using LaTeXStrings
 import AlgebraicMultigrid
 import DelimitedFiles

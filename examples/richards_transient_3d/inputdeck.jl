@@ -1,3 +1,6 @@
+#this example solves a 3d Richards equation flow problem
+#it also computes the gradient of a function involving the solution of the flow problem
+#the problem is described in detail on the repo's README.md file
 import DifferentiableBackwardEuler
 import DPFEHM
 import GaussianRandomFields

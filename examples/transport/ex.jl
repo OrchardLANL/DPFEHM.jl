@@ -1,3 +1,6 @@
+#this example solves a simple transport problem with a prescribed velocity
+#the prescribed velocity moves the mass to the right and up in the figures
+#the two plots show the initial and final concentrations
 using Test
 import DifferentiableBackwardEuler
 import DPFEHM

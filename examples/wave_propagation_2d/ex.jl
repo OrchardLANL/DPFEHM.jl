@@ -1,5 +1,8 @@
 # solving the wave equation
 # \frac{\partial ^2 u}{\partial t ^2} - c^2 [ \frac{\partial ^2 u}{\partial z^2} + \frac{\partial ^2 u}{\partial x^2}] + f = 0
+#a wave is generated at the top of the domain (the surface) and propagates into the subsurface
+#two forward problems are solved: one involving a homogeneous subsurface and another with a high velocity zone in the middle of the domain
+#finally, a (poorly regularized) inverse problem is solved
 
 import DPFEHM
 #using Printf 

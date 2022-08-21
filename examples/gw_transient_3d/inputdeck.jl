@@ -1,3 +1,6 @@
+#this example solves a 3d transient single phase flow problem
+#it also computes the gradient of a function involving the solution of the flow problem
+#the problem is essentially the same as the steady-state example, except it involves transient flow, which will eventually produce the steady-state flow in the steady-state example
 import ChainRulesCore
 import DifferentiableBackwardEuler
 import DPFEHM

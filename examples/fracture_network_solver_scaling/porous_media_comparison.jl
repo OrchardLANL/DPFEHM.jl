@@ -1,3 +1,5 @@
+#this produces the results in figure 1 of the supplementary information from this paper: https://doi.org/10.1029/2021WR031188
+#it solves some porous media flow problems using cholesky factorization and a conjugate gradient iterative solver (with an algebraic multigrid preconditioner) in 1, 2, and 3 dimensions to show the different scaling behavior in different dimensions
 using LaTeXStrings
 import AlgebraicMultigrid
 import DPFEHM

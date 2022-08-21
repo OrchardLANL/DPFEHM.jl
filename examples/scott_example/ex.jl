@@ -1,3 +1,8 @@
+#this performs inverse analysis repeatedly
+#the inverse problem is parameterized by coefficients of the eigenvectors of the permeability field
+#in the end, it produces a plot showing the distribution of how well the inverse analysis performs for each of the eigenvector coefficients
+#the example is somewhat computationally intensive
+#it is recommended to run this example in parallel by starting julia with "julia -p 32" where 32 processors will be used
 include("weeds.jl")
 
 #run the inverse analysis repeatedly for a set of parameters
