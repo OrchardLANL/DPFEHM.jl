@@ -47,6 +47,7 @@ Simulating the physical processes that occur in the Earth's subsurface with comp
 `DPFEHM` is a Julia package that includes computer models with a focus on the Earth's subsurface, especially fluid flow, which is critical for the aforementioned applications.
 `DPFEHM` is able to solve the groundwater flow equations (single phase flow), Richards equation (air/water), the advection-dispersion equation, and the 2d wave equation.
 One of the key features of `DPFEHM` is that it supports automatic differentiation, so it can be integrated into machine learning workflows using frameworks such as Flux or PyTorch.
+The automatic differentiation capabilities give it the same performance as adjoint methods.
 
 
 # Statement of need
@@ -55,7 +56,10 @@ Numerical models of subsurface flow and transport such as MODFLOW [@harbaugh2005
 They cannot because they do not support automatic differentation, which is needed for the gradient-based optimization methods that are ubiquitous in machine learning workflows.
 An automatically-differentiable model like `DPFEHM` can be seamlessly integrated into these machine learning workflows.
 This enables machine learning workflows with `DPFEHM` in the loop, e.g., to learn to manage pressure in a scenario where wastewater or carbon dioxide are being injected into the subsurface [@pachalieva2022physics].
+For example, without automatic differentiation the machine learning would get stuck when it needed to compute a Jacobian-vector product involving the subsurface simulator.
+DPFEHM fills this gap and enables the efficient computation of the Jacobian-vector product.
 It is additionally useful for non-machine learning workflows, because gradient calculations are also ubiqitous in more traditional workflows such as inverse analysis [@wu2022inverse] and uncertainty quantification [@betancourt2017conceptual].
+For example, inverse analysis often uses the gradient to perform some variation of gradient descent to find the solution to the inverse problem, so making this fast is important in this context.
 Of course, it can also be used to efficiently simulate complex physics related to flow and transport in the subsurface [@greer2022comparison] without exploiting the differentiability very deeply.
 
 An alternative to a differentiable numerical model is to use a differentiable machine learning model that is trained on data from a non-differentiable numerical model such as those listed above.
@@ -66,7 +70,7 @@ Second, in scenarios with complex physics, it may be impossible to generate suff
 By contrast, `DPFEHM` does not require any training -- just a description of the equations, boundary conditions, etc. that define the problem.
 
 `DPFEHM` was designed to be a research tool to explore the interface between numerical models and machine learning models.
-To date, it has been used in several publications including [@greer2022comparison,@wu2022inverse,@pachalieva2022physics].
+To date, it has been used in several publications including [@greer2022comparison;@wu2022inverse;@pachalieva2022physics].
 `DPFEHM` uses a two-point flux approximation finite volume scheme.
 This means that an orthogonal grid is required to ensure convergence, similar to other codes such as FEHM and PFLOTRAN
 Alternative codes such as Amanzi-ATS [@mercer2020amanzi], which use a more advanced mimetic finite difference discretization, do not require orthogonal meshes.
