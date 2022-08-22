@@ -2,7 +2,11 @@
 
 ## Description
 
-DPFEHM is a [Julia](http://julialang.org/) module that includes differentiable numerical models with a focus on the Earth's subsurface, especially fluid flow. Currently it supports the groundwater flow equations (single phase flow), Richards equation (air/water), the advection-dispersion equation, and the 2d wave equation.
+DPFEHM is a [Julia](http://julialang.org/) module that includes differentiable numerical models with a focus on the Earth's subsurface, especially fluid flow. Currently it supports the groundwater flow equations (single phase flow), Richards equation (air/water), the advection-dispersion equation, and the 2d wave equation. Since it is differentiable, it can easily be combined with machine learning models in a workflow such as this:
+
+![Pressure management with DPFEHM and machine learning](https://github.com/OrchardLANL/DPFEHM.jl/blob/c7665b027edd8bb8bfed70d25bb8b869caf254bf/examples/pressure_management/pressure_management_workflow.png)
+
+This workflow shows how to train a machine learning model to mitigate problems with injecting fluid into the earth's subsurface (such as induced seismicity or leakage of carbon dioxide). More details on this workflow are available [here](https://arxiv.org/abs/2206.10718).
 
 ## Installation
 Within Julia, you can install DPFEHM and test that it works by running
