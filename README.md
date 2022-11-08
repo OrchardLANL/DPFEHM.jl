@@ -194,7 +194,7 @@ fig.savefig("conductivity.png")
 PyPlot.close(fig)
 -->
 
-Since we'll be solving a time-dependent problem this time, we must set the initial condition and define a storage parameter. Since this is a multi-phase flow problem, we also need to define a couple parameters that control the relative permeability.
+Since we'll be solving a time-dependent problem this time, we must set the initial condition and define a storage parameter. Note that in unsaturated flows the storage parameter is often neglected (and this can be achieved by setting `specificstorage` to an array of ones), but this problem involves a saturated flow so we include it here. Since this is a multi-phase flow problem, we also need to define a couple parameters that control the hydraulic conductivity's dependence on the saturation. The conductivity is given by the conductivity when saturated multiplied by a relative permeability (which depends on the saturation and varies between 0 and 1).
 ```julia
 #set up the initial condition, the storage, and the van genuchten parameters for relative permeability
 h0 = zeros(size(coords, 2))#initial condition
@@ -291,6 +291,10 @@ PyPlot.close(fig)
 ## Advanced usage
 
 The [examples](https://github.com/OrchardLANL/DPFEHM.jl/tree/master/examples) illustrate more advanced usage including [inverse problems](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/gw_multigrid_inverse/inputdeck.jl), [combining DPFEHM with a neural network](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/pressure_management/ex.jl), [flow on discrete fracture networks](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/fracture_network_solver_scaling/plots_for_paper.jl), as well as solving the [advection-dispersion](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/transport/ex.jl) and [wave](https://github.com/OrchardLANL/DPFEHM.jl/blob/master/examples/wave_propagation_2d/ex.jl) equations.
+
+## Note on the numerical methods
+
+DPFEHM generally uses a two-point flux approximation to discretize the equations. This means, for example, that when the fluid flux between cell $i$ and cell $j$ that is proportional to the pressure gradient, the pressure gradient is approximated as being proportional to $p_i-p_j$ where $p_i$ and $p_j$ are the pressures in cells $i$ and $j$, respectively.
 
 ## License
 
