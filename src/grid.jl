@@ -1,3 +1,15 @@
+"""
+darcy_velocity(h, Ks, mins, maxs, ns)
+
+Return a function that computes the Darcy velocity on a regular grid
+
+# Arguments
+- `h`: pressure
+- `Ks`: permeability
+- `mins`: the minimum x[/y/z] coordinates of the cube
+- `maxs`: the maximum x[/y/z] coordinates of the cube
+- `ns`: the number of grid points in the x, [y, and z] directions
+"""
 function darcy_velocity(h, Ks, mins, maxs, ns)#note: this is currently not very Zygote-compatible
 	allpoints = map(getpoints, mins, maxs, ns)
 	h_itp_unscaled = Interpolations.interpolate(h, Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnCell()))))
@@ -7,10 +19,22 @@ function darcy_velocity(h, Ks, mins, maxs, ns)#note: this is currently not very 
 	return (x...)->reverse(K_itp(x...) * Interpolations.gradient(h_itp, x...))
 end
 
+"""
+getpoints(min, max, n)
+
+Return a range from `min` to `max` with `n` points
+"""
 function getpoints(min, max, n)
 	return range(min, max; length=n)
 end
 
+"""
+load_uge(filename)
+
+Return mesh information (cell coordinates, cell volumes, cell neighbors, interfacial areas, and distances between neighboring nodes) from the ASCII .uge `filename`
+
+For more information on the format, see: https://documentation.pflotran.org/user_guide/cards/subsurface/grids/unstructured_explicit_grid.html
+"""
 function load_uge(filename)
 	fuge = open(filename)
 	line = readline(fuge)
@@ -40,6 +64,18 @@ function load_uge(filename)
 	return coords, volumes, neighbors, areas, lengths
 end
 
+"""
+regulargrid1d(mins, maxs, ns, dy, dz)
+
+Return mesh information (cell coordinates, cell volumes, cell neighbors, interfacial areas divided by the length between cell centers)
+
+# Arguments
+- `mins`: the minimum x coordinates of the cube
+- `maxs`: the maximum x coordinates of the cube
+- `ns`: the number of grid points in the x directions
+- `dy`: the size of the cells in the y dimension
+- `dz`: the size of the cells in the z dimension
+"""
 function regulargrid1d(mins, maxs, ns, dy, dz)
 	coords = Array{Float64}(undef, 1, prod(ns))
 	xs = getpoints(mins[1], maxs[1], ns[1])
@@ -59,6 +95,17 @@ function regulargrid1d(mins, maxs, ns, dy, dz)
 	return coords, neighbors, areasoverlengths, volumes
 end
 
+"""
+regulargrid2d(mins, maxs, ns, dz)
+
+Return mesh information (cell coordinates, cell volumes, cell neighbors, interfacial areas divided by the length between cell centers)
+
+# Arguments
+- `mins`: the minimum x and y coordinates of the cube
+- `maxs`: the maximum x and y coordinates of the cube
+- `ns`: the number of grid points in the x and y directions
+- `dz`: the size of the cells in the z dimension
+"""
 function regulargrid2d(mins, maxs, ns, dz)
 	linearindex = (i1, i2)->i2 + ns[2] * (i1 - 1)
 	coords = Array{Float64}(undef, 2, prod(ns))
@@ -90,6 +137,16 @@ function regulargrid2d(mins, maxs, ns, dz)
 	return coords, neighbors, areasoverlengths, volumes
 end
 
+"""
+regulargrid3d(mins, maxs, ns)
+
+Return mesh information (cell coordinates, cell volumes, cell neighbors, interfacial areas divided by the length between cell centers)
+
+# Arguments
+- `mins`: the minimum x, y, and z coordinates of the cube
+- `maxs`: the maximum x, y, and z coordinates of the cube
+- `ns`: the number of grid points in the x, y, and z directions
+"""
 function regulargrid3d(mins, maxs, ns)
 	linearindex = (i1, i2, i3)->i3 + ns[3] * (i2 - 1) + ns[3] * ns[2] * (i1 - 1)
 	coords = Array{Float64}(undef, 3, prod(ns))
