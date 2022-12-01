@@ -1,5 +1,20 @@
+"""
+ForwardDiff_gradient(x...)
+
+Wrapper for `ForwardDiff.gradient`
+"""
 ForwardDiff_gradient(x...) = ForwardDiff.gradient(x...)
 
+"""
+kr(psi, alpha, N)
+
+Return the van Genuchten relative permeability
+
+# Arguments
+- `psi`: pressure head
+- `alpha`: van Genucthen's α parameter
+- `N`: van Genuchten's N parameter
+"""
 function kr(psi, alpha, N)
 	if psi < 0
 		m = (N - 1) / N
@@ -11,6 +26,11 @@ function kr(psi, alpha, N)
 	end
 end
 
+"""
+kr(x)
+
+Returns `kr(x[1], x[2], x[3])`
+"""
 kr(x::AbstractArray) = kr(x[1], x[2], x[3])
 
 function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculus.SymbolParameter{:kr}, args, wrt)
@@ -22,10 +42,20 @@ function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculu
 	end
 end
 
+"""
+hm(x, y)
+
+Returns the harmonic mean of `x` and `y`
+"""
 function hm(x, y)
 	return 2 / (1 / x + 1 / y)
 end
 
+"""
+hm(x)
+
+Returns the harmonic mean of `x[1]` and `x[2]`
+"""
 hm(x::AbstractArray) = hm(x[1], x[2])
 
 function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculus.SymbolParameter{:hm}, args, wrt)
@@ -45,6 +75,16 @@ function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculu
 	return :(ifelse($arg > 0, 1, -1) * $(NonlinearEquations.Calculus.differentiate(arg, wrt)))
 end
 
+"""
+effective_saturation(alpha::Number, psi::Number, N::Number)
+
+Return the effective saturation
+
+# Arguments
+- `alpha`: van Genucthen's α parameter
+- `psi`: pressure head
+- `N`: van Genuchten's N parameter
+"""
 function effective_saturation(alpha::Number, psi::Number, N::Number)
 	m = (N - 1) / N
 	if psi < 0
@@ -76,6 +116,23 @@ end
 	end
 end
 
+"""
+richards_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; callback=soln->nothing, kwargs...)
+
+Return the solution to a steady state unsaturated groundwater problem
+
+# Arguments
+- `psi0`: initial guess for the pressure
+- `Ks`: permeability
+- `neighbors`: array of pairs indicating which cells share an interface
+- `areasoverlengths`: array with the same length as `neighbors` that gives the interfacial area divided by the length between the two cell centers
+- `dirichletnodes`: array of indices indicating which nodes have Dirichlet boundary conditions
+- `dirichletpsis`: array of pressures at the Dirichlet boundary (length is equal to the number of cells on the grid)
+- `coords`: the coordinates of the cell centers
+- `alphas`: van Genuchten α parameters for each cell
+- `Ns`: van Genuchten N parameters for each cell
+- `Qs`: array of fluxes (length is equal to the number of cells on the grid)
+"""
 function richards_steadystate(psi0, Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; callback=soln->nothing, kwargs...)
 	isfreenode, nodei2freenodei, freenodei2nodei = getfreenodes(length(Qs), dirichletnodes)
 	args = (psi0[isfreenode], Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs, ones(length(Qs)), ones(length(Qs)))
