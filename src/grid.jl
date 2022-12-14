@@ -1,5 +1,5 @@
 """
-darcy_velocity(h, Ks, mins, maxs, ns)
+`darcy_velocity(h, Ks, mins, maxs, ns)`
 
 Return a function that computes the Darcy velocity on a regular grid
 
@@ -20,7 +20,7 @@ function darcy_velocity(h, Ks, mins, maxs, ns)#note: this is currently not very 
 end
 
 """
-getpoints(min, max, n)
+`getpoints(min, max, n)`
 
 Return a range from `min` to `max` with `n` points
 """
@@ -29,7 +29,7 @@ function getpoints(min, max, n)
 end
 
 """
-load_uge(filename)
+`load_uge(filename)`
 
 Return mesh information (cell coordinates, cell volumes, cell neighbors, interfacial areas, and distances between neighboring nodes) from the ASCII .uge `filename`
 
@@ -65,7 +65,7 @@ function load_uge(filename)
 end
 
 """
-regulargrid1d(mins, maxs, ns, dy, dz)
+`regulargrid1d(mins, maxs, ns, dy, dz)`
 
 Return mesh information (cell coordinates, cell volumes, cell neighbors, interfacial areas divided by the length between cell centers)
 
@@ -96,7 +96,7 @@ function regulargrid1d(mins, maxs, ns, dy, dz)
 end
 
 """
-regulargrid2d(mins, maxs, ns, dz)
+`regulargrid2d(mins, maxs, ns, dz)`
 
 Return mesh information (cell coordinates, cell volumes, cell neighbors, interfacial areas divided by the length between cell centers)
 
@@ -138,7 +138,7 @@ function regulargrid2d(mins, maxs, ns, dz)
 end
 
 """
-regulargrid3d(mins, maxs, ns)
+`regulargrid3d(mins, maxs, ns)`
 
 Return mesh information (cell coordinates, cell volumes, cell neighbors, interfacial areas divided by the length between cell centers)
 

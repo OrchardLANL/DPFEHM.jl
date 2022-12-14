@@ -31,3 +31,22 @@
 		end
 	end
 end
+@doc """
+`transport_residuals(u, vxs, vys, vzs, Ds, neighbors, areasoverlengths, dirichletnodes, dirichletus, Qs, volumes, coords; use_upwind=true)`
+
+Return the residuals of a finite volume discretization of the advection-dispersion equation.
+
+#Arguments
+- `u`: the concentration of the species undergoing transport
+- `vxs`: the x components of the velocity at each cell
+- `vys`: the y components of the velocity at each cell
+- `vzs`: the z components of the velocity at each cell
+- `Ds`: the dispersion coefficient at each cell
+- `neighbors`: array of pairs indicating which cells share an interface
+- `areasoverlengths`: array with the same length as `neighbors` that gives the interfacial area divided by the length between the two cell centers
+- `dirichletnodes`: array of indices indicating which nodes have Dirichlet boundary conditions
+- `dirichletus`: array of concentrations at the Dirichlet boundary (length is equal to the number of cells on the grid)
+- `Qs`: array of fluxes (length is equal to the number of cells on the grid)
+- `volumes`: array of the volume of each each cell (length is equal to the number of cells on the grid)
+"""
+transport_residuals

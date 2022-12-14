@@ -1,12 +1,12 @@
 """
-ForwardDiff_gradient(x...)
+`ForwardDiff_gradient(x...)`
 
 Wrapper for `ForwardDiff.gradient`
 """
 ForwardDiff_gradient(x...) = ForwardDiff.gradient(x...)
 
 """
-kr(psi, alpha, N)
+`kr(psi, alpha, N)`
 
 Return the van Genuchten relative permeability
 
@@ -27,7 +27,7 @@ function kr(psi, alpha, N)
 end
 
 """
-kr(x)
+`kr(x)`
 
 Returns `kr(x[1], x[2], x[3])`
 """
@@ -43,7 +43,7 @@ function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculu
 end
 
 """
-hm(x, y)
+`hm(x, y)`
 
 Returns the harmonic mean of `x` and `y`
 """
@@ -52,7 +52,7 @@ function hm(x, y)
 end
 
 """
-hm(x)
+`hm(x)`
 
 Returns the harmonic mean of `x[1]` and `x[2]`
 """
@@ -76,7 +76,7 @@ function NonlinearEquations.Calculus.differentiate(x::NonlinearEquations.Calculu
 end
 
 """
-effective_saturation(alpha::Number, psi::Number, N::Number)
+`effective_saturation(alpha::Number, psi::Number, N::Number)`
 
 Return the effective saturation
 
@@ -115,9 +115,29 @@ end
 		end
 	end
 end
+@doc """
+`richards_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; callback=soln->nothing, kwargs...)`
+
+Return the residuals at the free nodes of a finite volume discretization of Richards equation
+
+# Arguments
+- `psi`: pressure head
+- `Ks`: permeability
+- `neighbors`: array of pairs indicating which cells share an interface
+- `areasoverlengths`: array with the same length as `neighbors` that gives the interfacial area divided by the length between the two cell centers
+- `dirichletnodes`: array of indices indicating which nodes have Dirichlet boundary conditions
+- `dirichletpsis`: array of pressures at the Dirichlet boundary (length is equal to the number of cells on the grid)
+- `coords`: the coordinates of the cell centers
+- `alphas`: van Genuchten α parameters for each cell
+- `Ns`: van Genuchten N parameters for each cell
+- `Qs`: array of fluxes (length is equal to the number of cells on the grid)
+- `specificstorage`: array of the specific storage associated with each cell (length is equal to the number of cells on the grid)
+- `volumes`: array of the volume of each each cell (length is equal to the number of cells on the grid)
+"""
+richards_residuals
 
 """
-richards_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; callback=soln->nothing, kwargs...)
+`richards_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichletpsis, coords, alphas, Ns, Qs; callback=soln->nothing, kwargs...)`
 
 Return the solution to a steady state unsaturated groundwater problem
 

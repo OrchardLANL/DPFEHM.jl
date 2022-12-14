@@ -19,9 +19,26 @@
 		end
 	end
 end
+@doc """
+`groundwater_residuals(h, Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs, specificstorage, volumes; linear_solver::Function=amg_solver, kwargs...)`
+
+Return the residuals at the free nodes of a finite volume discretization of the groundwater flow equation.
+
+# Arguments
+- `h`: pressure
+- `Ks`: permeability
+- `neighbors`: array of pairs indicating which cells share an interface
+- `areasoverlengths`: array with the same length as `neighbors` that gives the interfacial area divided by the length between the two cell centers
+- `dirichletnodes`: array of indices indicating which nodes have Dirichlet boundary conditions
+- `dirichleths`: array of pressures at the Dirichlet boundary (length is equal to the number of cells on the grid)
+- `Qs`: array of fluxes (length is equal to the number of cells on the grid)
+- `specificstorage`: array of the specific storage associated with each cell (length is equal to the number of cells on the grid)
+- `volumes`: array of the volume of each each cell (length is equal to the number of cells on the grid)
+"""
+groundwater_residuals
 
 """
-amg_solver(A, b; kwargs...)
+`amg_solver(A, b; kwargs...)`
 
 Return the solution to `A`x=`b` using an algebraic multigrid solver, which the `kwargs` being passed to the AlgebraicMultigrid solver
 """
@@ -32,7 +49,7 @@ function amg_solver(A, b; kwargs...)
 end
 
 """
-cholesky_solver(A, b; kwargs...)
+`cholesky_solver(A, b; kwargs...)`
 
 Return the solution to `A`x=`b` using a Cholesky factorization solver
 """
@@ -43,7 +60,7 @@ function cholesky_solver(A, b; kwargs...)
 end
 
 """
-groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; linear_solver::Function=amg_solver, kwargs...)
+`groundwater_steadystate(Ks, neighbors, areasoverlengths, dirichletnodes, dirichleths, Qs; linear_solver::Function=amg_solver, kwargs...)`
 
 Return the solution to a steady state groundwater flow problem
 

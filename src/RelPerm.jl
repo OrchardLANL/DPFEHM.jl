@@ -4,7 +4,7 @@ module RelPerm
 
 module Corey
 	"""
-	S_wn(S_w, S_wir, S_nir)
+	`S_wn(S_w, S_wir, S_nir)`
 	
 	Return the normalized saturation of the wetting phase
 
@@ -17,7 +17,7 @@ module Corey
 		return (S_w - S_wir) / (1 - S_wir - S_nir)
 	end
 	"""
-	kr_w(S_w, S_wir, S_nir, N_w, k0_w)
+	`kr_w(S_w, S_wir, S_nir, N_w, k0_w)`
 	
 	Return the Corey relative permeability of the wetting phase
 
@@ -38,7 +38,7 @@ module Corey
 		end
 	end
 	"""
-	kr_n(S_w, S_wir, S_nir, N_w, k0_w)
+	`kr_n(S_w, S_wir, S_nir, N_w, k0_w)`
 	
 	Return the Corey relative permeability of the nonwetting phase
 

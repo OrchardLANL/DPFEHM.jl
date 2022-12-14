@@ -1,12 +1,16 @@
 import Zygote
 
-function linearIndex(nz, iz, ix) 
+"""
+`linearIndex(nz, iz, ix)`
+
+Return the 1-d index of (iz, ix).
+"""
+function linearIndex(nz, iz, ix)
     return (ix-1)*nz + iz
 end
 
 @NonlinearEquations.equations exclude=(nz, nx) function wave2diter(c, f, u, uim1, uim2, nz, nx, nt, dz, dx, dt) # 1st order
     NonlinearEquations.setnumequations(nz*nx)
-
     ## TOP ROW #########################
     # top row (x, not corners)
     iz = 1
@@ -16,9 +20,7 @@ end
         diff1 = v1*(-(uim1[linearIndex(nz, 2, ix)] - uim1[linearIndex(nz, 1, ix)] - uim2[linearIndex(nz, 2, ix)] - uim2[linearIndex(nz, 1, ix)]))
         diff2 = 0.5*v2^2*(uim1[linearIndex(nz, 1, ix-1)] -2*uim1[linearIndex(nz, 1, ix)] + uim1[linearIndex(nz, 1, ix+1)])
         NonlinearEquations.addterm((ix-1)*nz+iz, u[linearIndex(nz, 1, ix)] - 2*uim1[linearIndex(nz, 1, ix)] -diff1 - diff2)
-
     end
-
     ## SECOND FROM TOP ROW #########################
     # second to top row (x, not corners)
     iz = 2
@@ -29,18 +31,14 @@ end
     for ix=1:nx
         NonlinearEquations.addterm((ix-1)*nz + iz, -1*(uim1[linearIndex(nz, 1, ix)] - 2*uim1[linearIndex(nz, 2, ix)] + uim1[linearIndex(nz, 3, ix)])/dz^2*c[linearIndex(nz, 2, ix)]^2)
     end
-
     ## BOTTOM ROW #########################
-
     for ix=2:nx-1
         v1 = c[linearIndex(nz, nz, ix)] * dt/dz
         v2 = c[linearIndex(nz, nz, ix)] * dt/dx
         diff1 = v1*(-(uim1[linearIndex(nz, nz, ix)] - uim1[linearIndex(nz, nz-1, ix)] - uim2[linearIndex(nz, nz, ix)] - uim2[linearIndex(nz, nz-1, ix)]))
         diff2 = 0.5*v2^2*(uim1[linearIndex(nz, nz, ix-1)] -2*uim1[linearIndex(nz, nz, ix)] + uim1[linearIndex(nz, nz, ix+1)])
         NonlinearEquations.addterm((ix-1)*nz+iz, u[linearIndex(nz, nz, ix)] - 2*uim1[linearIndex(nz, nz, ix)] -diff1 - diff2)
-
     end
-
     ## SECOND FROM BOTTOM ROW #########################
     # second to bottom row (x, not corners)
     iz = nz - 1
@@ -51,7 +49,6 @@ end
     for ix=1:nx
         NonlinearEquations.addterm((ix-1)*nz + iz, -1*(uim1[linearIndex(nz, nz, ix)] - 2*uim1[linearIndex(nz, nz-1, ix)] + uim1[linearIndex(nz, nz-2, ix)])/dz^2*c[linearIndex(nz, nz-1, ix)]^2)
     end
-
     # LEFT COLUMN ####################
     ix = 1
     for iz=2:nz-1
@@ -60,21 +57,17 @@ end
         diff1 = 0.5*v1^2*(uim1[linearIndex(nz, iz-1, 1)] -2*uim1[linearIndex(nz, iz, 1)] + uim1[linearIndex(nz, iz+1, 1)])
         diff2 = v2*((uim1[linearIndex(nz, iz, 2)] - uim1[linearIndex(nz, iz, 1)] - uim2[linearIndex(nz, iz, 2)] - uim2[linearIndex(nz, iz, 1)]))
         NonlinearEquations.addterm((ix-1)*nz+iz, u[linearIndex(nz, iz, 1)] - 2*uim1[linearIndex(nz, iz, 1)] -diff1 - diff2)
-
     end
-
     # SECOND FROM LEFT COLUMN ####################
     # second to left edge (x)
     ix = 2
     for iz=1:nz
         NonlinearEquations.addterm((ix-1)*nz + iz, -1*(uim1[linearIndex(nz, iz, 1)] - 2*uim1[linearIndex(nz, iz, 2)] + uim1[linearIndex(nz, iz, 3)])/dx^2*c[linearIndex(nz, iz, 2)]^2)
     end
-
     # second to left edge (z, not corners)
     for iz=3:nz-2
         NonlinearEquations.addterm((ix-1)*nz + iz, -1*(-uim1[linearIndex(nz, iz-2, 2)] +16*uim1[linearIndex(nz, iz-1, 2)] + -30*uim1[linearIndex(nz, iz, 2)] +16*uim1[linearIndex(nz, iz+1, 2)] - uim1[linearIndex(nz, iz+2, 2)])/dz^2/12*c[linearIndex(nz, iz, 2)]^2)
     end
-
     # RIGHT COLUMN ####################
     ix = nx
     for iz=2:nz-1
@@ -83,21 +76,17 @@ end
         diff1 = 0.5*v1^2*(uim1[linearIndex(nz, iz-1, nx)] -2*uim1[linearIndex(nz, iz, nx)] + uim1[linearIndex(nz, iz+1, nx)])
         diff2 = v2*(-(uim1[linearIndex(nz, iz, nx)] - uim1[linearIndex(nz, iz, nx-1)] - uim2[linearIndex(nz, iz, nx)] - uim2[linearIndex(nz, iz, nx-1)]))
         NonlinearEquations.addterm((ix-1)*nz+iz, u[linearIndex(nz, iz, nx)] - 2*uim1[linearIndex(nz, iz, nx)] -diff1 - diff2)
-
     end
-
     # SECOND FROM RIGHT COLUMN ####################
     # second to right edge (x)
     ix = nx - 1
     for iz=1:nz
         NonlinearEquations.addterm((ix-1)*nz + iz, -1*(uim1[linearIndex(nz, iz, nx)] - 2*uim1[linearIndex(nz, iz, nx-1)] + uim1[linearIndex(nz, iz, nx-2)])/dx^2*c[linearIndex(nz, iz, nx-1)]^2)
     end
-
     # second to right edge (z, not corners)
     for iz=3:nz-2
         NonlinearEquations.addterm((ix-1)*nz + iz, -1*(-uim1[linearIndex(nz, iz-2, nx-1)] +16*uim1[linearIndex(nz, iz-1, nx-1)] + -30*uim1[linearIndex(nz, iz, nx-1)] +16*uim1[linearIndex(nz, iz+1, nx-1)] - uim1[linearIndex(nz, iz+2, nx-1)])/dz^2/12*c[linearIndex(nz, iz, nx-1)]^2)
     end
-
     # CENTER ####################
     for iz=3:nz-2
         for ix=3:nx-2
@@ -105,34 +94,79 @@ end
             NonlinearEquations.addterm((ix-1)*nz + iz, -1*(-uim1[linearIndex(nz, iz, ix-2)] +16*uim1[linearIndex(nz, iz, ix-1)] + -30*uim1[linearIndex(nz, iz, ix)] +16*uim1[linearIndex(nz, iz, ix+1)] - uim1[linearIndex(nz, iz, ix+2)])/(dx^2*12)*c[linearIndex(nz, iz, ix)]^2) # x
         end
     end
-
     ################################################################################
     # time derivative and source ####################
     for iz=1:nz
         for ix=1:nx
             # forcing term
             NonlinearEquations.addterm((ix-1)*nz + iz, f[linearIndex(nz, iz, ix)])
-
             # 1st order time derivative
             NonlinearEquations.addterm((ix-1)*nz + iz, (u[linearIndex(nz, iz, ix)] - 2*uim1[linearIndex(nz, iz, ix)] + uim2[linearIndex(nz, iz, ix)])/dt^2 )
         end
     end
 end
+@doc """
+`wave2diter(c, f, u, uim1, uim2, nz, nx, nt, dz, dx, dt)`
 
+Return the residuals at the free nodes of a 2D finite difference discretization of the wave equation
+
+# Arguments
+- `c`: velocity field
+- `f`: forcing
+- `u`: wave
+- `uim1`: wave at the previous time step
+- `uim2`: wave two time steps ago
+- `nz`: number of grid cells in the z direction
+- `nx`: number of grid cells in the x direction
+- `nt`: number of time steps
+- `dz`: distance between grid cells in the z direction
+- `dx`: distance between grid cells in the x direction
+- `dt`: time step
+"""
+richards_residuals
 
 ## WAVE PROPAGATION ####################
+"""
+`uoneiter(ui, uim1, uim2, c, f, nz, nx, nt, dz, dx, dt)`
+
+Return the wave amplitude at the next time step
+
+# Arguments
+- `ui`: wave at the current time step
+- `uim1`: wave at the previous time step
+- `uim2`: wave two time steps ago
+- `c`: velocity field
+- `f`: forcing
+- `nz`: number of grid cells in the z direction
+- `nx`: number of grid cells in the x direction
+- `dz`: distance between grid cells in the z direction
+- `dx`: distance between grid cells in the x direction
+- `dt`: time step
+"""
 function uoneiter(ui, uim1, uim2, c, f, nz, nx, nt, dz, dx, dt) # 1st order, one iteration of wave propagation
     return ui - dt^2 * wave2diter_residuals(c, f, ui, uim1, uim2, nz, nx, nt, dz, dx, dt)
 end
 
 # multiple iterations
+"""
+`getuIters(cval, f, nz, nx, nt, dz, dx, dt)`
+
+Return the wave amplitude at the next `nt` time steps starting from a zero initial condition
+
+# Arguments
+- `cval`: velocity field
+- `f`: forcing
+- `nz`: number of grid cells in the z direction
+- `nx`: number of grid cells in the x direction
+- `nt`: number of time steps
+- `dz`: distance between grid cells in the z direction
+- `dx`: distance between grid cells in the x direction
+- `dt`: time step
+"""
 function getuIters(cval, f, nz, nx, nt, dz, dx, dt)
     u = zeros(nz*nx, nt + 2)
     for i=3:nt + 2
         u[:, i] = uoneiter(zeros(size(u, 1)), u[:, i - 1], u[:, i - 2], cval, f[:, i - 2], nz, nx, nt, dz, dx, dt)
-        #if mod(i, 10) == 0
-        #   @printf("Iteration %i\n", i)
-        #end
     end
     return u
 end
@@ -175,6 +209,11 @@ function ChainRulesCore.rrule(::typeof(getuIters), c, f, nz, nx, nt, dz, dx, dt)
 end
 
 ## PULLBACK FUNCTIONS ####################
+"""
+`make_wave2diter_pullback(args...)`
+
+Return a pullback function for `wave2diter_residuals`. The arguments are the same as for `wave2diter_residuals`
+"""
 function make_wave2diter_pullback(args...)
     function wave2diter_pullback(delta)
 		retval = (ChainRulesCore.NoTangent(),#function
@@ -200,5 +239,3 @@ function ChainRulesCore.rrule(::typeof(wave2diter_residuals), c, f, u, uim1, uim
     pullback = make_wave2diter_pullback(args...)
     return residuals, pullback
 end
-
-
