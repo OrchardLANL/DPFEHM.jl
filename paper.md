@@ -35,7 +35,7 @@ affiliations:
    index: 3
  - name: SmartTensors, LLC, USA
    index: 4
-date: 30 June 2022
+date: 17 June 2023
 bibliography: paper.bib
 
 ---
@@ -52,9 +52,11 @@ The automatic differentiation capabilities give it the same performance as adjoi
 
 # Statement of need
 
-Numerical models of subsurface flow and transport such as MODFLOW [@harbaugh2005modflow], FEHM [@zyvoloski1997summary], PFLOTRAN [@lichtner2015pflotran], etc. are ubiquitous, but these models cannot be efficiently integrated with machine learning frameworks.
-They cannot because they do not support automatic differentation, which is needed for the gradient-based optimization methods that are ubiquitous in machine learning workflows.
-An automatically-differentiable model like `DPFEHM` can be seamlessly integrated into these machine learning workflows.
+Numerical models of subsurface flow and transport such as MODFLOW [@harbaugh2005modflow], FEHM [@zyvoloski1997summary], PFLOTRAN [@lichtner2015pflotran], etc. are ubiquitous.
+However, it is challenging to integrate these with machine learning frameworks for highly parameterized problems, which are common in the subsurface.
+Highly parameterized problems require reverse-mode differentiation (i.e., adjoint methods), which depend upon Jacobian matrices.
+DPFEHM relies uses automatic differentiation to compute these sparse Jacobians, but non-differentiable alternatives require significant developer time to implement these Jacobians.
+An automatically-differentiable model like `DPFEHM` can be seamlessly integrated into these machine learning workflows via reverse-mode differentiation.
 This enables machine learning workflows with `DPFEHM` in the loop, e.g., to learn to manage pressure in a scenario where wastewater or carbon dioxide are being injected into the subsurface [@pachalieva2022physics].
 For example, without automatic differentiation the machine learning would get stuck when it needed to compute a Jacobian-vector product involving the subsurface simulator.
 `DPFEHM` fills this gap and enables the efficient computation of the Jacobian-vector product.
@@ -70,15 +72,17 @@ First, such a machine learning model may be insufficiently trustworthy, dependin
 By contrast, `DPFEHM` uses a finite volume method that ensures local mass conservation, which is backed by rigorous accuracy guarantees.
 Second, in scenarios with complex physics, it may be impossible to generate sufficient data to train an adequate machine learning model.
 By contrast, `DPFEHM` does not require any training -- just a description of the equations, boundary conditions, etc. that define the problem.
+Physics-based alternative models such as FEHM [@zyvoloski1997summary] and PFLOTRAN [@lichtner2015pflotran] currently support a wider range of physics processes, but lack automatic differentiation.
 
 `DPFEHM` was designed to be a research tool to explore the interface between numerical models and machine learning models.
 To date, it has been used in several publications including [@greer2022comparison;@wu2022inverse;@pachalieva2022physics].
-`DPFEHM` uses a two-point flux approximation finite volume scheme.
-This means that an orthogonal grid is required to ensure convergence, similar to other codes such as FEHM and PFLOTRAN
-Alternative codes such as Amanzi-ATS [@mercer2020amanzi], which use a more advanced mimetic finite difference discretization, do not require orthogonal meshes.
+`DPFEHM` uses a two-point flux approximation finite volume scheme, which is commonly used by commercial reservoir simulation codes.
+This means that an orthogonal grid is required to ensure convergence, similar to other codes such as FEHM and PFLOTRAN.
+Alternative codes such as Amanzi-ATS [@mercer2020amanzi], which use a more advanced mimetic finite difference discretization that supports non-K-orthogonal.
+Other methods for non-K-orthogonal grids include multipoint flux approximations, least-squares gradient reconstruction, and mixed finite element approaches.
 The performance advantage for `DPFEHM` over non-differentiable alternatives such as those mentioned previously comes in computing the gradient of a function that involves the solution of a subsurface physics equation.
 In these settings, the cost of computing a gradient with `DPFEHM` is typically around the cost of running two physics simulations.
-For non-differentiable models, the cost is equal to performing a number of simulations that is proportional to the number of parameters -- exorbitant when the number of parameters is large.
+For models that lack discrete adjoints, which covers most non-differentiable models, the cost is equal to performing a number of simulations that is proportional to the number of parameters -- exorbitant when the number of parameters is large.
 This is important for subsurface physics, because there is often one or more parameters at each node in the mesh.
 
 # Installation
