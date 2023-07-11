@@ -78,7 +78,7 @@ Physics-based alternative models such as FEHM [@zyvoloski1997summary] and PFLOTR
 To date, it has been used in several publications including [@greer2022comparison;@wu2022inverse;@pachalieva2022physics].
 `DPFEHM` uses a two-point flux approximation finite volume scheme, which is commonly used by commercial reservoir simulation codes.
 This means that an orthogonal grid is required to ensure convergence, similar to other codes such as FEHM and PFLOTRAN.
-Alternative codes such as Amanzi-ATS [@mercer2020amanzi], which use a more advanced mimetic finite difference discretization that supports non-K-orthogonal.
+Alternative codes such as Amanzi-ATS [@mercer2020amanzi] use a more advanced mimetic finite difference discretization that supports non-K-orthogonal grids.
 Other methods for non-K-orthogonal grids include multipoint flux approximations, least-squares gradient reconstruction, and mixed finite element approaches.
 The performance advantage for `DPFEHM` over non-differentiable alternatives such as those mentioned previously comes in computing the gradient of a function that involves the solution of a subsurface physics equation.
 In these settings, the cost of computing a gradient with `DPFEHM` is typically around the cost of running two physics simulations.
