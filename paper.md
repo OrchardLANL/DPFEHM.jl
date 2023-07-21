@@ -60,7 +60,7 @@ An automatically-differentiable model like `DPFEHM` can be seamlessly integrated
 This enables machine learning workflows with `DPFEHM` in the loop, e.g., to learn to manage pressure in a scenario where wastewater or carbon dioxide are being injected into the subsurface [@pachalieva2022physics].
 For example, without automatic differentiation the machine learning would get stuck when it needed to compute a Jacobian-vector product involving the subsurface simulator.
 `DPFEHM` fills this gap and enables the efficient computation of the Jacobian-vector product.
-It is additionally useful for non-machine learning workflows, because gradient calculations are also ubiqitous in more traditional workflows such as inverse analysis [@wu2022inverse] and uncertainty quantification [@betancourt2017conceptual] (UQ).
+It is additionally useful for non-machine learning workflows, because gradient calculations are also ubiqitous in more traditional workflows such as inverse analysis [@wu2022inverse] and uncertainty quantification [@gelman2015stan] (UQ).
 For example, inverse analysis often uses the gradient to perform some variation of gradient descent to find the solution to the inverse problem, so making this fast is important in this context.
 Traditional inverse modeling and UQ tools (`PEST` [@doherty2010approaches] being the most widely used example), take a non-intrusive approach, which allows them to work with any simulator but forces them to treat the simulator as a black box.
 `DPFEHM` lays the groundwork for next-generation UQ tools that utilize the gradient and Jacobian information that `DPFEHM` efficiently provides.
