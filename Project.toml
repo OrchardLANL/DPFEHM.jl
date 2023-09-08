@@ -1,7 +1,7 @@
 name = "DPFEHM"
 uuid = "8c3ed914-120a-47bd-8d72-56c743732853"
 authors = ["Daniel O'Malley <omalled@lanl.gov>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
