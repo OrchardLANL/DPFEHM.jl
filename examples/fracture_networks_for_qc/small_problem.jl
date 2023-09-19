@@ -103,5 +103,5 @@ end
 #A, x, b = fractal_fractures(2 ^ 4, 3; fracture_logk=5.0, doplot=true)
 #A, x, b = fractal_fractures(2 ^ 3, 2; fracture_logk=5.0, doplot=true, dirichlet=true)
 #DelimitedFiles.writedlm("b_small.csv", b, ',')
-A, x, b = fractal_fractures(2 ^ 2, 1; fracture_logk=5.0, doplot=true, dirichlet=true, num_random_nodes=2)
+A, x, b = fractal_fractures(2 ^ 2, 1; fracture_logk=5.0, doplot=true, dirichlet=false, num_random_nodes=2)
 DelimitedFiles.writedlm("b_small.csv", b, ',')
