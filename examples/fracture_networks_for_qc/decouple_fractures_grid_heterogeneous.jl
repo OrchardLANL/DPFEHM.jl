@@ -1,6 +1,9 @@
 import DelimitedFiles
 import DPFEHM
 import PyPlot
+import Random
+
+Random.seed!(0)
 
 function addfractures!(logks, fracture_logk, fracture_scales; beta=0.5)
 	#this recursively defines a formula where fracture_logk ∝ length ^ beta as in equation 5 from Jeffrey's paper (10.1002/2016WR018806)
@@ -36,7 +39,7 @@ function fractal_fractures(N, fracture_scales; doplot=false, matrix_logk=0.0, fr
 	neumann_node = 2 * N + div(N, 2)#inject into the tip of the fracture
 	caging_nodes = [div(3 * N, 4) * N + div(N, 4), div(3 * N, 4) * N + div(3 * N, 4)]
 	coords, neighbors, areasoverlengths, _ = DPFEHM.regulargrid2d(mins, maxs, ns, 1.0)
-	random_nodes = rand(1:size(coords, 2), num_random_nodes)
+	random_nodes = rand(N + 1:size(coords, 2) - N, num_random_nodes)
 	if doplot
 		fig, ax = PyPlot.subplots()
 		img = ax.imshow(logks, extent=[mins[1], maxs[1], mins[2], maxs[2]], origin="lower")
@@ -110,7 +113,17 @@ for i = 3:8
 end
 for i = 1:25
 	for j = 1:5
-		A, x, b = fractal_fractures(2 ^ 6, 6 - 1; fracture_logk=5.0, doplot=true, dirichlet=false, neumann=false, caging=false, num_random_nodes=i)
+        tryit = true
+        A, x, b = nothing, nothing, nothing
+        while tryit
+            A, x, b = fractal_fractures(2 ^ 6, 6 - 1; fracture_logk=5.0, doplot=false, dirichlet=false, neumann=false, caging=false, num_random_nodes=i)
+            if i == sum(b .!= 0)
+                tryit = false
+            end
+        end
+        if i != sum(b .!= 0)
+            @show i, sum(b .!= 0)
+        end
 		DelimitedFiles.writedlm("b_random_injectors_$(i)_instance$j.csv", b, ',')
 	end
 end

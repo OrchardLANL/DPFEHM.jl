@@ -41,7 +41,7 @@ function fractal_fractures(N, fracture_scales; doplot=false, matrix_logk=0.0, fr
 	random_nodes = rand(1:size(coords, 2), num_random_nodes)
 	if doplot
 		fig, ax = PyPlot.subplots()
-		img = ax.imshow(logks, extent=[mins[1], maxs[1], mins[2], maxs[2]], origin="lower")
+        img = ax.imshow(logks[:, 2:end - 1], extent=[mins[1], maxs[1], mins[2], maxs[2]], origin="lower")
 		fig.colorbar(img)
 		if neumann
 			@show coords[:, neumann_node]
@@ -104,4 +104,6 @@ end
 #A, x, b = fractal_fractures(2 ^ 3, 2; fracture_logk=5.0, doplot=true, dirichlet=true)
 #DelimitedFiles.writedlm("b_small.csv", b, ',')
 A, x, b = fractal_fractures(2 ^ 2, 1; fracture_logk=5.0, doplot=true, dirichlet=false, num_random_nodes=2)
+@show sum(b .!= 0)
+@show b
 DelimitedFiles.writedlm("b_small.csv", b, ',')
