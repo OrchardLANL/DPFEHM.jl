@@ -1,5 +1,5 @@
 import Random
-Random.seed!(1)
+Random.seed!(5)
 include("weeds_fracture_3D.jl")
 x_test = randn(3 * num_eigenvectors + 2) #the input to the function should follow an N(0, I) distribution -- the eigenvectors and eigenvalues are embedded inside f
 @time @show f(x_test) #compute the pressure at the critical location
