@@ -10,7 +10,7 @@ import SparseArrays
 using LinearAlgebra
 using AlgebraicMultigrid
 
-#include("twoPhase.jl")
+# include("twoPhase.jl")
 
 mutable struct Fluid
     vw::Float64
@@ -20,7 +20,6 @@ mutable struct Fluid
 end
 
 ns = [64 64]#number of nodes on the grid
-K = ones(reverse(ns)...);
 mins = [0, 0];  maxs = [1-(1/64), 1-(1/64)]#size of the domain, in meters
 coords, neighbors, areasoverlengths, volumes=DPFEHM.regulargrid2d(mins, maxs, ns, 1.0);#build the grid
 dirichleths = zeros(size(coords, 2))
@@ -33,9 +32,11 @@ fluid=Fluid(1.0, 1.0, 0.0, 0.0)
 S0=zeros(size(coords, 2))
 nt = 2;  dt = 0.7/25;
 CriticalPoint=2048
+K = ones(size(coords, 2));
+everystep=false # output all the time steps
 
 function FindGrad(K)
-    args=h0, S0, K, dirichleths,  dirichletnodes, Qs, volumes, areasoverlengths, ns, fluid, dt, neighbors, nt
+    args=h0, S0, K, dirichleths,  dirichletnodes, Qs, volumes, areasoverlengths, fluid, dt, neighbors, nt, everystep
     P, S= DPFEHM.solveTwoPhase(args...)
     return P[CriticalPoint]
 end
