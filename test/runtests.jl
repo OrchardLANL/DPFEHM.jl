@@ -17,3 +17,6 @@ end
 @testset "Wave equation" begin
 	include("wave.jl")
 end
+@testset "two-phase flow equation" begin
+	include("twophase.jl")
+end
