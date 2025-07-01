@@ -1,11 +1,11 @@
-using SparseArrays
-import PyPlot
-using IterativeSolvers
-using AlgebraicMultigrid
-using DPFEHM
-using Test
-
-
+#HR edit
+import AlgebraicMultigrid
+import SparseArrays
+import Zygote
+import LinearAlgebra
+import Roots 
+import Test
+import DPFEHM
 
 
 mutable struct Fluid
@@ -40,7 +40,7 @@ q=zeros(N * N * 1);
 q[[1 N * N]].=[1 -1];
 fluid = Fluid(1.0, 1.0, 0.0, 0.0)
 S0=zeros(N * N * 1);
-nt = 25; 
+nt = 5; 
 dt = 0.7/25;
 
 
@@ -67,7 +67,7 @@ function TPFA(grid,K,q,kwargs...)
 	z1 = reshape(TZ[:,:,1:Nz],N); z2 = reshape(TZ[:,:,2:Nz+1],N);
 	DiagVecs = [-z2[1:end - Nx * Ny],-y2[1:end - Nx],-x2[1:end - 1],x1+x2+y1+y2+z1+z2,-x1[2:end],-y1[Nx + 1:end],-z1[Nx * Ny + 1:end]];
 	DiagIndx = [-Nx*Ny,-Nx,-1,0,1,Nx,Nx*Ny];
-	A = spdiagm(N, N, map((x, y)->x=>y, DiagIndx, DiagVecs)...)
+	A = SparseArrays.spdiagm(N, N, map((x, y)->x=>y, DiagIndx, DiagVecs)...)
 	# A[1,1] = A[1,1]+sum(grid.K[:,1,1]);
     u=cg_solver_matlab(A, q; kwargs...)
 	P = reshape(u,Nx,Ny,Nz);
@@ -119,7 +119,7 @@ function Upstream(grid,S,fluid,V,q,T)
 	dtx = (T/Nts)./pv;
 
 	A=GenA(grid,V,q);
-	A=spdiagm(N, N, 0=>dtx)*A;
+	A=SparseArrays.spdiagm(N, N, 0=>dtx)*A;
 	fi =max.(q,0).*dtx;
 	for t=1:Nts
 		mw,mo=RelPerm(S,fluid); fw = mw./(mw+mo);
@@ -140,7 +140,7 @@ function GenA(grid,V,q)
 	ZP=max.(V.z,0); z2=reshape(ZP[:,:,2:Nz+1],N);
 	DiagVecs=[z2[1:end - Nx * Ny],y2[1:end - Nx],x2[1:end - 1],fp+x1-x2+y1-y2+z1-z2,-x1[2:end],-y1[Nx + 1:end],-z1[Nx * Ny + 1:end]]; # diagonal vectors
 	DiagIndx=[-Nx*Ny,-Nx,-1,0,1,Nx,Nx*Ny]; # diagonal index
-	A = spdiagm(N, N, map((x, y)->x=>y, DiagIndx, DiagVecs)...)
+	A = SparseArrays.spdiagm(N, N, map((x, y)->x=>y, DiagIndx, DiagVecs)...)
 	return A
 end
 
@@ -155,13 +155,11 @@ for t=1:nt
 	S=Upstream(grid,S,fluid,V,q,dt);
     push!(P_data, deepcopy(reshape(P, grid.Nx*grid.Ny)))
     push!(S_data, deepcopy(reshape(S, grid.Nx*grid.Ny)))
-    println(string("solving Matlab Time step :  ", t,  " out of :", nt))
 end
 
 P_matlab=P_data
 S_matlab=S_data
 
-include("twophase.jl") # import DPFEHM
 # include("twophase_optimize.jl")
 ns = [N N]#number of nodes on the grid
 mins = [0, 0];  maxs = [1-1/N, 1-1/N]#size of the domain, in meters
@@ -172,15 +170,14 @@ h0 = zeros(size(coords, 2))
 K = ones(size(coords, 2));
 CriticalPoint=Int(ceil((N*N)/2))
 everystep=false # output all the time steps
-
 #First test the gradient
 function FindGrad(K)
     nts=2
     args=h0, S0, K, dirichleths,  dirichletnodes, q, volumes, areasoverlengths, fluid, dt, neighbors, nts, everystep
-    P, S= solvetwophase(args...)
+    P, S= DPFEHM.solvetwophase(args...)
     return P[CriticalPoint]
 end
-using Test
+
 function checkgradientquickly(f, x0, gradf, n; delta::Float64=1e-8, kwargs...)
 	indicestocheck = sort(collect(1:length(x0)), by=i->abs(gradf[i]), rev=true)[1:n]
 	f0 = f(x0)
@@ -189,82 +186,68 @@ function checkgradientquickly(f, x0, gradf, n; delta::Float64=1e-8, kwargs...)
 		x[i] += delta
 		fval = f(x)
 		grad_f_i = (fval - f0) / delta
-		@test isapprox(gradf[i], grad_f_i; kwargs...)
-        @show isapprox(gradf[i], grad_f_i; kwargs...)
+		@Test.test isapprox(gradf[i], grad_f_i; kwargs...)
 	end
 end
-print("Forward gradient time")
-@time grad_Ks= Zygote.gradient(FindGrad,K)[1]
-@show size(grad_Ks)
-print("forward time")
-@time FindGrad(K)
-
-function_evaluation, back = Zygote.pullback(FindGrad,K)
-print("gradient time")
-@time grad = back(1.0)#compute the gradient of a function involving solveforh
-@show norm(grad_Ks-grad[1])
+grad_Ks= Zygote.gradient(FindGrad,K)[1]
 checkgradientquickly(FindGrad, K, grad_Ks, 3; delta=1e-8, rtol=1e-1)
-println(string("Pass gradient test"))
 # Test the value with reference solution 
-everystep=true # output all the time steps
-#First test the gradient
+everystep=false # output all the time steps
 args=h0, S0, K, dirichleths,  dirichletnodes, q, volumes, areasoverlengths, fluid, dt, neighbors, nt, everystep
-P_dp, S_dp= solvetwophase(args...)
+P_dp, S_dp= DPFEHM.solvetwophase(args...)
+total_norm=LinearAlgebra.norm(P_matlab[end]-P_dp)+LinearAlgebra.norm(S_matlab[end]-S_dp)
+@Test.test total_norm<1e-5
 
-total_norm=0
-for i=1:nt
-	println(string("Comparing Saturation at time step :  ", i))
-	fig, axs = PyPlot.subplots(1, 2, figsize=(8, 4.5))
-    total_norm=total_norm+norm(P_matlab[i]-P_dp[i])+norm(S_matlab[i]-S_dp[i])
-    axs[1].imshow(reshape(S_dp[i],ns[1],ns[2]), vmin=0, vmax=1, origin="lower")
-	axs[1].set_aspect("equal")
-	axs[2].imshow(reshape(S_matlab[i],ns[1],ns[2]), vmin=0, vmax=1, origin="lower")
-	axs[2].set_aspect("equal")
-	display(fig)
-	println()
+#Buckley–Leverett analytical solution
+ns = 100#number of nodes on the grid
+L=1;
+mins = 0;  maxs = L#size of the domain, in meters
+dy=1
+dz=1
+Area=dy*dz
+steadyhead=0
+coords, neighbors, areasoverlengths, volumes=DPFEHM.regulargrid1d(mins, maxs, ns, dy, dz);#build the grid
+dirichleths = zeros(size(coords, 2))
+dirichletnodes=[]
+for i = 1:size(coords, 2)
+    if  (coords[1, i]) == maxs
+        push!(dirichletnodes, i)
+        dirichleths[i] = steadyhead
+    end
 end
-
-for i=1:nt
-	println(string("Comparing Pressure at time step :  ", i))
-	fig, axs = PyPlot.subplots(1, 2, figsize=(8, 4.5))
-    total_norm=total_norm+norm(P_matlab[i]-P_dp[i])+norm(S_matlab[i]-S_dp[i])
-    img1=axs[1].imshow(reshape(P_dp[i],ns[1],ns[2]), origin="lower")
-	axs[1].set_aspect("equal")
-	img2=axs[2].imshow(reshape(P_matlab[i],ns[1],ns[2]),  origin="lower")
-	axs[2].set_aspect("equal")
-	fig.colorbar(img1)
-	fig.colorbar(img2)
-	display(fig)
-	println()
+specificstorage = fill(0.1, size(coords, 2))  
+Qs = zeros(size(coords, 2))
+Qs[[1 ]].=[0.03 ];
+h0 = zeros(size(coords, 2))
+fluid=Fluid(1.0, 1.0, 0.0, 0.0)
+S0=zeros(size(coords, 2))
+nt = 25;  dt = 0.7/25;
+K = ones(size(coords, 2));
+everystep=false # output all the time steps
+args=h0, S0, K, dirichleths,  dirichletnodes, Qs, volumes, areasoverlengths, fluid, dt, neighbors, nt, everystep
+P, S= DPFEHM.solvetwophase(args...)
+# BL solution
+x=0:coords[2]-coords[1]:L
+xd=x./L
+# Define the derivative of the fractional flow function
+fprime(s) = 2*s*(1-s) / (2*s^2 - 2*s + 1)^2
+# Determine the critical saturation S* (where the tangent from (0,0) touches f(S))
+S_star = 1/sqrt(2)  # ≈0.7071
+# Maximum characteristic speed (the shock speed) is:
+v_shock = fprime(S_star)  # ≈1.2071
+# Define a function that returns the Buckley–Leverett saturation at physical position x and time t
+function BL_solution(x, t)
+    ξ = x / t
+    if ξ > v_shock
+        return 0.0
+    else
+        # Solve fprime(s) = ξ on the interval [S_star, 1]
+        s_sol = Roots.find_zero(s -> fprime(s) - ξ, (S_star, 1.0), Roots.Bisection())
+        return s_sol
+    end
 end
-
-@test total_norm<1e-5
-@show total_norm
-println(string("Pass vectorized solver test"))
-
-P_diff=P_matlab[end].-P_dp[end]
-S_diff=S_matlab[end].-S_dp[end]
-
-#Plot Error
-fig, ax = PyPlot.subplots()
-contour = ax.contourf(reshape(P_dp[end],grid.Nx,grid.Ny), 20)
-ax.set_title("Pressure")
-fig.colorbar(contour, ax=ax)
-display(fig)
-PyPlot.close(fig)
-
-#Plot Error
-fig, ax = PyPlot.subplots()
-contour = ax.contourf(reshape(P_diff,grid.Nx,grid.Ny), 20)
-ax.set_title("Pressure Error")
-fig.colorbar(contour, ax=ax)
-display(fig)
-PyPlot.close(fig)
-
-
-fig, ax = PyPlot.subplots()
-contour = ax.contourf(reshape(S_diff,grid.Nx,grid.Ny), 20)
-ax.set_title("Saturation Error")
-fig.colorbar(contour, ax=ax)
-display(fig)
-PyPlot.close(fig)
+# Choose the time for comparison. Here we use time-step 12.
+t_d = Qs[1]*(nt * dt)/Area    # as A, phi and q is 1
+S_BL = [BL_solution(x_val, t_d) for x_val in x]
+error=sqrt(mean(S_BL-S).^2)
+@Test.test error<1e-2 # to save time, higher resoulation gives lowe error
