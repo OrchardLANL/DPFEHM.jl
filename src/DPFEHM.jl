@@ -18,5 +18,6 @@ include("richards.jl")
 include("transport.jl")
 include("wave.jl")
 include("utilities.jl")
+include("twophase.jl")
 
 end
