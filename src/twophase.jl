@@ -1,15 +1,9 @@
 # Source code for twophase flow (HR edit)
-import DPFEHM
-import PyPlot
-import Zygote
-import GaussianRandomFields
-import Optim
 import NonlinearEquations
 import ChainRulesCore
 import SparseArrays
-using LinearAlgebra
-using AlgebraicMultigrid
-using IterativeSolvers
+import AlgebraicMultigrid
+
 
 #solver
 function cg_solver(A, b; kwargs...)

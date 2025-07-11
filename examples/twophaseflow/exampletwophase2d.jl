@@ -1,17 +1,9 @@
-
-import DPFEHM
+#HR edit
 import PyPlot
-import Zygote
 import GaussianRandomFields
-import Optim
-import NonlinearEquations
-import ChainRulesCore
-import SparseArrays
-using LinearAlgebra
-using AlgebraicMultigrid
 import Random
+import DPFEHM
 
-include("twophase.jl")
 
 mutable struct Fluid
     vw::Float64
@@ -19,6 +11,7 @@ mutable struct Fluid
     swc::Float64
     sor::Float64
 end
+
 
 ns = [64 64]#number of nodes on the grid
 mins = [0, 0];  maxs = [1-(1/64), 1-(1/64)]#size of the domain, in meters
@@ -32,7 +25,6 @@ h0 = zeros(size(coords, 2))
 fluid=Fluid(1.0, 1.0, 0.0, 0.0)
 S0=zeros(size(coords, 2))
 nt = 25;  dt = 0.7/25;
-
 
 
 Random.seed!(1)
@@ -50,15 +42,12 @@ K=reshape(exp.(logKs2d),size(coords, 2))
 
 
 everystep=true # output all the time steps
-
 args=h0, S0, K, dirichleths,  dirichletnodes, Qs, volumes, areasoverlengths, fluid, dt, neighbors, nt, everystep
-P, S= solvetwophase(args...)
-
-
+P, S= DPFEHM.solvetwophase(args...)
 fig, axs = PyPlot.subplots()
 for t=1:nt
     # Create a filename with the time step index
-    img=axs.imshow(reshape(S[t],ns[1],ns[2]), vmin=0, vmax=1, origin="lower",cmap="jet")
+    img=axs.imshow(reshape(S[t],ns[1],ns[2]), vmin=0, vmax=1, origin="lower",cmap="jet",interpolation="bicubic")
     axs.set_aspect("equal")
 	axs[:tick_params](axis="both", which="major", labelsize=14)
     display(fig)
